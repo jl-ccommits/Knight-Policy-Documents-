@@ -80,10 +80,12 @@ Happy to update them too if desired.
 - **Form fields:** field names, types, positions, and appearance identical.
 - **Visual QA:** all 136 pages rendered and compared before/after in two
   review rounds; layout, alignment, tables, and graphics verified.
-- One cosmetic note: a few paragraphs converted from larger/non-Arial type
-  (e.g., Property p. 46 item 3) now end short of the right margin with normal
-  spacing, because 10 pt Arial is narrower than the type it replaced. Content
-  and readability are unaffected.
+- Two cosmetic notes: (a) a few paragraphs converted from larger/non-Arial
+  type (e.g., Property p. 46 items 2–3) now end short of the right margin with
+  normal spacing, because 10 pt Arial is narrower than the type it replaced;
+  (b) two-line titles reduced from very large type (e.g., GL p. 63) keep their
+  original line spacing, so the pair sits slightly airier than a native 12 pt
+  title. Content and readability are unaffected.
 
 ## Suggested follow-ups
 
