@@ -1,0 +1,6 @@
+node_modules
+sfx.json
+soundtrack.wav
+*.silent.mp4
+stills/
+ref/
