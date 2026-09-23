@@ -5,8 +5,8 @@ Two cuts:
 | File | Format | Style |
 |---|---|---|
 | `quickquote-sketch.mp4` (`sketch.html`) | 16:9, 1920×1080, 21s | Hand-drawn doodle (boiling pencil lines, paper texture), after Tak's "Oktoberfest" clip |
-| `quickquote-sketch-tabs.mp4` (`sketch.html?char=tabs`) | 16:9, 1920×1080, 21s | Same sketch cut starring the CARMA critter (tab ears) |
-| `quickquote-sketch-cowboy.mp4` (`sketch.html?char=cowboy`) | 16:9, 1920×1080, 22.8s | Cowboy alt: the critter lassos the QuickQuote phone and yanks it in |
+| `quickquote-sketch-sprout.mp4` (`sketch.html?char=sprout`) | 16:9, 1920×1080, 21s | Same sketch cut starring the CARMA critter (leaf sprout) |
+| `quickquote-sketch-cowboy.mp4` (`sketch.html?char=cowboy`) | 16:9, 1920×1080, 23.2s | Cowboy alt (hat + polka-dot bandana): lassos the QuickQuote phone, squeezing it skinny before it springs back |
 | `quickquote.mp4` (`index.html`) | 4:5, 1080×1350, 23.5s | Clean brand/UI demo matching carma365.com |
 
 **Sketch cut:** a coral folder critter walks past the agency. A new cannabis account
@@ -17,11 +17,13 @@ CARMA QuickQuote card.
 
 **CARMA critter:** an original blocky mascot with baby-schema proportions (big low-set eyes with
 double shines, rounded squishy body, stubby legs, tiny "w" mouth). Its CARMA-specific looks
-are shown side by side in `mascot-options.png` and picked with `?char=`:
-- `tabs`: index tabs from the QuickQuote folder worn as ears (recommended)
+are shown side by side in `mascot-options.png`, `mascot-options-2.png` and `mascot-sprout.png` and picked with `?char=`:
+- `sprout`: a two-leaf seedling (chosen)
+- `tabs`: index tabs from the QuickQuote folder worn as ears
+- `bolt` / `check`: a yellow lightning bolt or a green checkmark sprout
 - `slash`: the logo's coral slash as a cowlick
 - `ink`: charcoal body in the wordmark color, with coral slash blush marks
-- `cowboy`: hat, bandana and a lasso that ropes the phone in (adds 1.8s)
+- `cowboy`: hat, polka-dot neck bandana and a lasso that ropes the phone in (adds 2.2s)
 
 ## Brand cut
 
