@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Draw Quote</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #1c1c1c; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #stage { width: 1920px; height: 1080px; flex: none; transform-origin: center; }
+  svg { display: block; }
+  .hand { font-family: Gaegu, 'Patrick Hand', cursive; font-weight: 700; }
+  .pen { font-family: 'Patrick Hand', cursive; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 15px sans-serif; background: #fff; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  body.live #replay { display: block; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<button id="replay">↻ Replay</button>
+<script src="kit.js"></script>
+<script>
+// Quick Draw Quote: a high-noon standoff between the cowboy critter and Paperwork Pete.
+const GY = 860;
+const T = {
+  title: [0.4, 2.5], cowIn: [2.2, 4.3], peteIn: [3.4, 6.0], talk: [6.1, 7.7],
+  bell: 7.8, draw: 9.2, flash: [8.85, 9.5],
+  taps: [9.95, 10.55, 11.15, 11.75], button: 12.35,
+  shoot: 12.55, hit: 12.95, catch: 13.6, quoted: [13.7, 15.6], holster: 14.4,
+  tip: 15.7, peteOut: [15.3, 16.7], end: 16.8,
+};
+const PH = { x: 880, y: 640, s: 0.75 };            // phone once drawn
+const COW_X = 620, PETE_X = 1320;
+const { back, cam, overlay, world } = setupStage('#F4E6CF');
+
+// ---- far background: sun, mesas, birds (not moved by the camera)
+const sun = ell(back, 1420, 390, 150, 150, '#F4C969', { sw: 4 });
+poly(back, [[-20, 705], [70, 612], [250, 606], [330, 705]], '#EDC3A6', { sw: 4 });
+poly(back, [[1080, 705], [1170, 590], [1430, 584], [1520, 705]], '#EDC3A6', { sw: 4 });
+poly(back, [[1580, 705], [1640, 640], [1800, 634], [1890, 705]], '#E9B89A', { sw: 4 });
+line(back, [[600, 250], [615, 238], [630, 250]], { sw: 3 }); line(back, [[652, 222], [664, 212], [676, 222]], { sw: 3 });
+
+// ---- main street
+rrect(cam, -60, 700, 2040, 440, 0, '#EFDAB6', { stroke: null });
+line(cam, [[-40, 704], [1960, 702]], { sw: 3 });
+{ const r = rng(12), pts = []; for (let x = -40; x <= 1960; x += 40) pts.push([x, GY + 2 + (r() - 0.5) * 3]); line(cam, pts, { sw: 4, j: 1.5 });
+  for (let i = 0; i < 40; i++) ell(cam, r() * 1920, 740 + r() * 300, 4 + r() * 6, 3 + r() * 3, '#D9BE92', { sw: 2, single: true, hatch: false }); }
+// agency saloon
+const saloon = el('g', {}, cam);
+poly(saloon, [[70, 522], [70, 440], [160, 440], [160, 410], [360, 410], [360, 440], [450, 440], [450, 522]], '#DDB388', { sw: 4.5 });
+rrect(saloon, 90, 520, 340, 342, 4, '#E9CBA6', { sw: 4.5 });
+rrect(saloon, 150, 428, 220, 58, 6, PAPER, { sw: 3.5, hatch: false });
+text(saloon, 260, 470, 'AGENCY', { size: 42 });
+poly(saloon, [[70, 600], [450, 600], [430, 632], [90, 632]], TAN, { sw: 4 });
+line(saloon, [[112, 632], [112, GY]], { sw: 4 }); line(saloon, [[408, 632], [408, GY]], { sw: 4 });
+rrect(saloon, 204, 680, 112, 182, 4, '#7A5A40', { sw: 4 });
+rrect(saloon, 210, 712, 48, 88, 8, TAN, { sw: 3.5 }); rrect(saloon, 262, 712, 48, 88, 8, TAN, { sw: 3.5 });
+[[122, 660], [328, 660]].forEach(([x, y]) => { rrect(saloon, x, y, 70, 58, 4, '#DCE8F2', { sw: 3.5 }); line(saloon, [[x + 35, y + 3], [x + 35, y + 55]], { sw: 2.5 }); line(saloon, [[x + 3, y + 29], [x + 67, y + 29]], { sw: 2.5 }); });
+// wanted poster + cactus
+const props = el('g', {}, cam);
+line(props, [[1565, GY], [1565, 600]], { sw: 5 });
+rrect(props, 1476, 452, 180, 226, 6, PAPER, { sw: 4, hatch: false });
+text(props, 1566, 500, 'WANTED', { size: 44 });
+{ const pg = el('g', { transform: 'translate(1566 590) scale(0.34)' }, props);
+  [0, 1, 2, 3].forEach((i) => rrect(pg, -86, -40 - i * 40, 172, 44, 6, PAPER, { sw: 6, hatch: false }));
+  rrect(pg, -86, -178, 172, 36, 10, INK, { single: true, hatch: false, sw: 3 }); }
+text(props, 1566, 628, '40-page apps', { cls: 'pen', size: 24 });
+text(props, 1566, 656, 'reward: your time', { cls: 'pen', size: 20, fill: '#7a706a' });
+rrect(props, 1760, 560, 54, 302, 27, GREEN, { sw: 4.5 });
+rrect(props, 1712, 640, 34, 100, 17, GREEN, { sw: 4 }); rrect(props, 1726, 712, 44, 26, 12, GREEN, { stroke: null });
+rrect(props, 1832, 600, 34, 110, 17, GREEN, { sw: 4 }); rrect(props, 1804, 686, 44, 26, 12, GREEN, { stroke: null });
+
+// ---- Paperwork Pete: a stack of forms in a bandit mask
+const pete = el('g', {}, cam), peteBody = el('g', {}, pete);
+[-26, 26].forEach((x) => rrect(peteBody, x - 12, -38, 24, 38, 8, PAPER, { sw: 3.5, hatch: false }));
+const PETE_SHEETS = [0, 1, 2, 3, 4, 5].map((i) => {
+  const g = el('g', { transform: `rotate(${[2, -3, 2.5, -2, 3, -1.5][i]} 0 ${-58 - i * 40})` }, peteBody);
+  rrect(g, -88, -80 - i * 40, 176, 46, 6, PAPER, { sw: 4, hatch: false });
+  line(g, [[-60, -60 - i * 40], [40, -61 - i * 40]], { sw: 2.2, stroke: '#c2b8ae' });
+  return g;
+});
+const peteArmL = el('g', {}, peteBody), peteArmR = el('g', {}, peteBody);
+rrect(peteArmL, -34, -12, 38, 24, 10, PAPER, { sw: 3.5, hatch: false }); rrect(peteArmR, -4, -12, 38, 24, 10, PAPER, { sw: 3.5, hatch: false });
+rrect(peteBody, -90, -250, 180, 38, 12, INK, { sw: 2, single: true, hatch: false });
+const peteEyes = el('g', {}, peteBody);
+[-32, 32].forEach((x) => { ell(peteEyes, x, -231, 13, 11, PAPER, { single: true, sw: 2, hatch: false }); ell(peteEyes, x + 3, -230, 5, 6, INK, { single: true, sw: 1, hatch: false }); });
+line(peteBody, [[-52, -262], [-14, -252]], { sw: 5 }); line(peteBody, [[52, -262], [14, -252]], { sw: 5 });
+const peteGrump = line(peteBody, [[-16, -190], [0, -196], [16, -190]], { sw: 4.5 });
+const peteShock = ell(peteBody, 0, -190, 9, 11, INK, { single: true, sw: 2, hatch: false });
+rrect(peteBody, -42, -330, 84, 50, 12, INK, { sw: 3, single: true, hatch: false });
+ell(peteBody, 0, -282, 76, 11, INK, { single: true, sw: 3, hatch: false });
+// the loose sheets he sheds, and the burst when the quote hits
+const shed = [...Array(9)].map((_, i) => { const g = el('g', {}, cam); rrect(g, -30, -38, 60, 76, 4, PAPER, { sw: 3, hatch: false }); line(g, [[-18, -16], [18, -17]], { sw: 2, stroke: '#c2b8ae' }); line(g, [[-18, 0], [12, 0]], { sw: 2, stroke: '#c2b8ae' }); return { g, e: 9.3 + i * 0.38, vx: (i % 2 ? 1 : -1) * (120 + (i * 37) % 160), spin: (i % 2 ? 1 : -1) * 260 }; });
+const burst = [...Array(6)].map((_, i) => { const g = el('g', {}, cam); rrect(g, -88, -23, 176, 46, 6, PAPER, { sw: 4, hatch: false }); const a = -Math.PI / 2 + (i - 2.5) * 0.45; return { g, vx: Math.cos(a) * 900, vy: Math.sin(a) * 1000 - 200, spin: (i - 2.5) * 260, y0: -58 - i * 40 }; });
+// Pete Jr.: what's left of him, waving a white flag
+const peteJr = el('g', {}, cam);
+line(peteJr, [[34, -60], [34, -150]], { sw: 4 });
+const flag = el('g', {}, peteJr); poly(flag, [[34, -150], [92, -140], [34, -118]], PAPER, { sw: 3.5, hatch: false });
+rrect(peteJr, -34, -80, 68, 56, 6, PAPER, { sw: 3.5, hatch: false });
+rrect(peteJr, -34, -72, 68, 16, 6, INK, { single: true, sw: 1, hatch: false });
+[-12, 12].forEach((x) => ell(peteJr, x, -64, 5, 4, PAPER, { single: true, sw: 1, hatch: false }));
+line(peteJr, [[-7, -40], [0, -44], [7, -40]], { sw: 3 });
+[-12, 12].forEach((x) => rrect(peteJr, x - 6, -24, 12, 24, 5, PAPER, { sw: 3, hatch: false }));
+
+// ---- tumbleweed (a crumpled form)
+const tumble = el('g', {}, cam);
+ell(tumble, 0, 0, 42, 40, '#F3EBDD', { sw: 4, hatch: false });
+line(tumble, [[-26, -10], [-4, 6], [10, -18], [26, 4]], { sw: 2.5 }); line(tumble, [[-20, 18], [2, 10], [18, 22]], { sw: 2.5 }); line(tumble, [[-8, -30], [6, -12]], { sw: 2.5 });
+
+// ---- hero, phone, watch, card, fx
+const cow = makeCritter(cam, { variant: 'cowboy' });
+const phone = makePhone(cam);
+const heldCard = el('g', { transform: 'translate(178 -268) rotate(-8) scale(0.85)' }, cow.held); drawCard(heldCard);
+const watch = makeWatch(cam);
+const flyCard = el('g', {}, cam); drawCard(flyCard);
+const speed = el('g', {}, cam); [-40, -14, 12, 38].forEach((y, i) => line(speed, [[-60 - i * 20, y], [-200 - i * 30, y]], { sw: 4 }));
+const confetti = makeConfetti(cam, { seed: 21 });
+const confettiLayer = cam.lastChild;
+const confettiLayerFade = (t) => setO(confettiLayer, 1 - P(t, 16.6, 17.6));
+const talk = bubble(cam, 230, 92, [80, 150], ['Fill out all', '40 pages, partner.'], 46);
+const quoted = bubble(cam, 200, 88, [150, 150], ['QUOTED!'], 80);
+const fx = el('g', {}, world);
+const title = el('g', {}, fx); text(title, 960, 210, 'HIGH NOON', { size: 130 });
+const titleRope = el('path', { d: 'M700 250 Q960 272 1220 246', fill: 'none', stroke: TAN, 'stroke-width': 10, 'stroke-linecap': 'round', 'stroke-dasharray': 560, 'stroke-dashoffset': 560 }, title);
+const drawFlash = el('g', {}, fx);
+for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; line(drawFlash, [[Math.cos(a) * 240, Math.sin(a) * 130], [Math.cos(a) * 330, Math.sin(a) * 180]], { sw: 7 }); }
+text(drawFlash, 0, 60, 'DRAW!', { size: 190, fill: CORAL_DK });
+const end = makeEndCard(overlay, { line1: 'Out-draw the paperwork.', line2: 'Cannabis indications in 3 minutes or less.' });
+
+const CAM = [[0, 960, 540, 1], [7.7, 960, 540, 1], [7.95, 620, 690, 2.1], [8.25, 620, 690, 2.1], [8.45, 1320, 660, 2.1], [8.8, 1320, 660, 2.1],
+  [9.05, 960, 540, 1], [9.4, 940, 600, 1.18], [12.45, 940, 600, 1.18], [12.8, 960, 540, 1]];
+const cowX = (t) => (t < T.cowIn[0] ? -260 : lerp(-260, COW_X, P(t, ...T.cowIn) * 0.85 + outCubic(P(t, ...T.cowIn)) * 0.15));
+const peteX = (t) => (t < T.peteIn[0] ? 2150 : t < T.peteOut[0] ? lerp(2150, PETE_X, outCubic(P(t, ...T.peteIn))) : lerp(PETE_X, 2150, inCubic(P(t, ...T.peteOut))));
+const ROWS_W = [0, 1, 2, 3].map((i) => PH.y + ROW_Y[i] * PH.s);
+const TAPS = [...T.taps.map((c, i) => [c, (GY - 118) - ROWS_W[i]]), [T.button, 0]];   // [tap time, hop height]
+
+function draw(t) {
+  boil(t);
+  const [cx, cy, cz] = keys(CAM, t); camera(cam, cx, cy, cz);
+
+  // title
+  const tk = popIn(t, ...T.title); setO(title, tk > 0 ? 1 : 0); setT(title, `translate(960 210) scale(${Math.max(0.001, 0.7 + 0.3 * tk).toFixed(3)}) translate(-960 -210)`);
+  titleRope.setAttribute('stroke-dashoffset', f1(560 * (1 - outCubic(P(t, 0.8, 1.3)))));
+
+  // tumbleweeds
+  const tw = t < 3 ? P(t, 0, 2.8) : P(t, 7.55, 9.1);
+  const twOn = (t < 2.8) || (t > 7.55 && t < 9.1);
+  setO(tumble, twOn ? 1 : 0);
+  setT(tumble, `translate(${f1(lerp(-120, 2080, tw))} ${f1(GY - 40 - Math.abs(Math.sin(tw * 18)) * 34)}) rotate(${f1(tw * 900)})`);
+
+  // Pete
+  const px = peteX(t), pAir = t > T.peteIn[0] && t < T.peteIn[1] ? Math.abs(Math.sin(t * 7)) * 8 : 0;
+  const panic = t > T.draw && t < T.hit;
+  const talking = t > T.talk[0] && t < T.talk[1];
+  const psq = 1 + (talking ? Math.sin(t * 16) * 0.03 : 0) + bump(t, T.bell, 0.3, -0.05);
+  setO(pete, t < T.hit ? 1 : 0);
+  setT(pete, `translate(${f1(px + (panic ? Math.sin(t * 60) * 4 : 0))} ${f1(GY - pAir)})`);
+  setT(peteBody, `scale(${(1 / Math.sqrt(psq)).toFixed(3)} ${psq.toFixed(3)})`);
+  setT(peteArmL, `translate(-88 -150) rotate(${f1(panic ? Math.sin(t * 30) * 40 : 10)})`);
+  setT(peteArmR, `translate(88 -150) rotate(${f1(panic ? -Math.sin(t * 30 + 1) * 40 : -10)})`);
+  setT(peteEyes, `translate(${f1(t > 8.3 && t < 8.8 ? Math.sin(t * 20) * 5 : (panic ? -4 : -6))} 0)`);
+  setO(peteGrump, panic ? 0 : 1); setO(peteShock, panic ? 1 : 0);
+  shed.forEach((s) => {
+    const d = t - s.e; if (d < 0 || d > 1.6 || s.e > T.hit) { setO(s.g, 0); return; }
+    setO(s.g, 1 - P(d, 1.2, 1.6));
+    setT(s.g, `translate(${f1(PETE_X + s.vx * d)} ${f1(GY - 260 - 420 * d + 520 * d * d)}) rotate(${f1(s.spin * d)})`);
+  });
+  burst.forEach((b) => {
+    const d = t - T.hit; if (d < 0 || d > 1.4) { setO(b.g, 0); return; }
+    setO(b.g, 1 - P(d, 1, 1.4));
+    setT(b.g, `translate(${f1(PETE_X + b.vx * d)} ${f1(GY + b.y0 + b.vy * d + 1400 * d * d)}) rotate(${f1(b.spin * d)})`);
+  });
+  const jrIn = outBack(P(t, T.hit + 0.15, T.hit + 0.5), 2.4);
+  const jrX = t < T.peteOut[0] ? PETE_X : lerp(PETE_X, 2150, inCubic(P(t, ...T.peteOut)));
+  setO(peteJr, t > T.hit + 0.15 && t < T.peteOut[1] ? 1 : 0);
+  setT(peteJr, `translate(${f1(jrX)} ${f1(GY - (t > T.peteOut[0] ? Math.abs(Math.sin(t * 16)) * 10 : 0))}) scale(${Math.max(0.001, jrIn).toFixed(3)})`);
+  setT(flag, `rotate(${f1(Math.sin(t * 9) * 12)} 34 -150)`);
+
+  // cowboy
+  const wk = walker(cowX, t);
+  let jump = 0, aR = null, sR = 1, aL = null, sL = 1, face = 'smile', look = 0, sq = 1;
+  TAPS.forEach(([c, J]) => { jump += tapJump(t, c, J); sq -= bump(t, c + 0.4, 0.16, 0.08); });
+  if (t > T.talk[0]) look = 5;
+  if (t > T.talk[0] + 0.8 && t < T.draw) face = 'squint';
+  if (t >= T.draw && t < T.catch) face = TAPS.some(([c]) => t > c - 0.36 && t < c + 0.3) ? 'o' : 'open';
+  if (t >= T.catch) face = 'happy';
+  // draw: right arm whips out
+  const drawK = bump(t, T.draw - 0.05, 0.4, 1);
+  if (drawK > 0) { aR = -30 * drawK; sR = 1 + drawK; }
+  T.taps.forEach((c, i) => { const k = reach(t, c); if (k > 0) { aR = 0; sR = lerp(1, (PH.x - 101 * PH.s - (COW_X + 112)) / 38, k); } });
+  { const k = reach(t, T.button); if (k > 0) { aR = lerp(0, 28, k); sR = lerp(1, 2.6, k); } }
+  if (t > T.shoot - 0.1 && t < T.shoot + 0.3) { aR = 0; sR = 1.5; }
+  if (t >= T.catch - 0.15) { const k = outBack(P(t, T.catch - 0.15, T.catch + 0.1), 1.6); aR = lerp(aR ?? 0, -60, k); sR = lerp(sR, 2.4, k); }
+  const celebrate = t > T.catch ? hop(t, T.catch + 0.1, 0.5, 90) + hop(t, T.catch + 0.7, 0.45, 60) : 0;
+  const tipK = bump(t, T.tip, 0.8, 1);
+  if (tipK > 0) { aL = lerp(0, 120, tipK); sL = lerp(1, 2.4, tipK); }
+  cow.pose({ x: wk.x, y: GY - wk.bob - jump - celebrate, t, walk: wk.walk, amp: wk.amp, air: jump + celebrate > 4, face, look, aR, sR, aL, sL, sq, hatLift: tipK * 34, hatTilt: -tipK * 22 });
+  setO(cow.held, t >= T.catch ? 1 : 0);
+
+  // phone: drawn from the hip, holstered after the catch
+  let pk = 0;
+  if (t >= T.draw && t < T.holster) pk = outBack(P(t, T.draw, T.draw + 0.3), 1.6);
+  else if (t >= T.holster) pk = 1 - inCubic(P(t, T.holster, T.holster + 0.3));
+  const hip = [COW_X + 110, GY - 70];
+  setO(phone.g, pk > 0.01 ? 1 : 0);
+  const shake = t > T.shoot - 0.05 && t < T.shoot + 0.2 ? Math.sin(t * 90) * 5 : 0;
+  setT(phone.g, `translate(${f1(lerp(hip[0], PH.x, pk) + shake)} ${f1(lerp(hip[1], PH.y, pk))}) rotate(${f1((1 - pk) * -300)}) scale(${(PH.s * Math.max(0.12, pk)).toFixed(3)})`);
+  phone.update(t, T.taps, T.button);
+
+  // watch
+  const wIn = Math.min(outBack(P(t, 9.5, 9.9), 2), 1 - inCubic(P(t, 13.2, 13.45)));
+  watch.update(t, 9.7, 12.6, 1150, 290, t > 9.5 && t < 13.45 ? wIn : 0);
+
+  // the quote fires through Pete's stack, then flips back to the cowboy
+  if (t >= T.shoot && t < T.catch) {
+    let x, y, r;
+    if (t < T.hit) { const k = P(t, T.shoot, T.hit); x = lerp(PH.x + 60, PETE_X - 40, k); y = lerp(PH.y - 120, GY - 160, k); r = 0; }
+    else { const k = inOut(P(t, T.hit, T.catch)); const tgt = [COW_X + 178 * 0.85 + 30, GY - 268]; x = lerp(PETE_X - 40, tgt[0], k); y = lerp(GY - 160, tgt[1], k) - Math.sin(Math.PI * k) * 260; r = k * -360; }
+    setO(flyCard, 1); setT(flyCard, `translate(${f1(x)} ${f1(y)}) rotate(${f1(r)}) scale(0.85)`);
+    const sk = t < T.hit ? 1 : 0; setO(speed, sk); setT(speed, `translate(${f1(x)} ${f1(y)})`);
+  } else { setO(flyCard, 0); setO(speed, 0); }
+  confetti.update(t, T.hit, PETE_X, GY - 200, GY + 20);
+
+  // bubbles, flash, end
+  showBubble(talk, t, ...T.talk, 1180, 420, 1.2);
+  showBubble(quoted, t, ...T.quoted, 400, 420, 2);
+  const fk = popIn(t, ...T.flash); setO(drawFlash, fk > 0 ? 1 : 0);
+  setT(drawFlash, `translate(960 250) scale(${Math.max(0.001, fk * (1 + bump(t, T.flash[0], 0.3, 0.12))).toFixed(3)}) rotate(-4)`);
+  setO(props, 1 - 0.8 * P(t, 16.2, 16.8)); setO(sun, 1 - 0.85 * P(t, 16.2, 16.8));
+  confettiLayerFade(t);
+  end.update(t, T.end);
+}
+
+run({
+  duration: 22, draw, music: 'western',
+  sfx: [
+    { t: 0.1, k: 'whoosh' }, { t: 0.45, k: 'pop' }, { t: 0.85, k: 'scribble' },
+    ...steps(T.cowIn[0] + 0.1, T.cowIn[1]), ...steps(T.peteIn[0] + 0.1, T.peteIn[1], 0.32, 'paper'),
+    { t: T.talk[0], k: 'pop2' }, { t: 7.55, k: 'whoosh' }, { t: T.bell, k: 'bell' }, { t: 8.35, k: 'swish' },
+    { t: T.flash[0], k: 'pop' }, { t: T.draw, k: 'whoosh' }, { t: T.draw + 0.05, k: 'click' },
+    ...T.taps.map((c) => ({ t: c - 0.3, k: 'hop' })), ...[...T.taps, T.button].map((c) => ({ t: c, k: 'click' })),
+    ...T.taps.map((c) => ({ t: c + 0.05, k: 'pew' })), ...T.taps.map((c) => ({ t: c + 0.12, k: 'ding' })),
+    ...shed.filter((s) => s.e < T.hit).map((s) => ({ t: s.e, k: 'paper' })),
+    { t: 12.6, k: 'ding' }, { t: T.shoot, k: 'pew' }, { t: T.shoot + 0.02, k: 'whoosh' },
+    { t: T.hit, k: 'chomp' }, { t: T.hit + 0.02, k: 'confetti' }, { t: T.hit + 0.05, k: 'paper' }, { t: T.hit + 0.15, k: 'paper' },
+    { t: T.hit + 0.3, k: 'pop2' }, { t: T.catch, k: 'chime' }, { t: T.quoted[0], k: 'pop' }, { t: T.catch + 0.1, k: 'boing' },
+    { t: T.holster, k: 'whoosh' }, { t: T.tip + 0.2, k: 'sparkle' }, ...steps(T.peteOut[0], T.peteOut[1], 0.12, 'tick'),
+    { t: T.end, k: 'pop' }, { t: T.end + 0.3, k: 'pop2' }, { t: T.end + 0.6, k: 'scribble' },
+    { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
+  ],
+});
+</script>
+</body>
+</html>

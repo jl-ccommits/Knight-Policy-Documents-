@@ -32,8 +32,8 @@ if (args[0] === '--stills') {
 
 const out = args[0] || path.join(here, 'quickquote.mp4');
 const fps = Number(args[1] || 30);
-const { duration, sfx } = await page.evaluate(() => ({ duration: window.DURATION, sfx: window.SFX }));
-writeFileSync(path.join(here, 'sfx.json'), JSON.stringify({ duration, sfx }, null, 1));
+const { duration, sfx, music } = await page.evaluate(() => ({ duration: window.DURATION, sfx: window.SFX, music: window.MUSIC || 'uke' }));
+writeFileSync(path.join(here, 'sfx.json'), JSON.stringify({ duration, sfx, music }, null, 1));
 
 const silent = out.replace(/\.mp4$/, '.silent.mp4');
 const ff = spawn(FFMPEG, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-',

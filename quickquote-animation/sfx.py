@@ -114,6 +114,14 @@ SFX = {
     'blip': lambda: tone(988, 0.12, 30, ((1, 1), (3, .15))) * 0.22,
     'chime': lambda: layer([(i * 0.09, tone(midi(m), 1.2, 3.5, ((1, 1), (2, .35), (3, .12))))
                             for i, m in enumerate([72, 76, 79, 84, 88])], 1.6) * 0.22,
+    'bell': lambda: tone(midi(55), 2.6, 1.4, ((1, 1), (2.4, .5), (3.1, .32), (4.2, .2), (5.4, .1))) * 0.32,
+    'buzz': lambda: layer([(i * 0.2, tone(165, 0.13, 6, ((1, 1), (3, .45), (5, .25))) * 0.45) for i in range(3)], 0.6),
+    'clunk': lambda: layer([(0, tone(105, 0.25, 16, ((1, 1), (2.1, .3))) * 0.8),
+                            (0, lowpass(noise(0.03), 0.4) * env(int(0.03 * SR), 0.001, 90) * 0.5)], 0.25),
+    'crank': lambda: layer([(i * 0.07, lowpass(noise(0.018), 0.7) * env(int(0.018 * SR), 0.0005, 260) * 0.45) for i in range(11)], 0.8),
+    'scratch': lambda: layer([(0, sweep(900, 180, 0.22, 5, 'square') * 0.35), (0.12, sweep(260, 700, 0.18, 7, 'square') * 0.28),
+                              (0, lowpass(noise(0.35), 0.3) * env(int(0.35 * SR), 0.01, 5) * 0.25)], 0.4),
+    'pew': lambda: sweep(1600, 420, 0.13, 18) * 0.32,
     'confetti': lambda: layer([(rng.uniform(0, 0.7), lowpass(noise(0.02), 0.7) * env(int(0.02 * SR), 0.0005, 250)
                                 * rng.uniform(.1, .35)) for _ in range(40)], 0.8),
 }
@@ -168,11 +176,60 @@ def music(duration):
     return L, R
 
 
+def whistle(freq, dur):
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    f = freq * (1 + 0.006 * np.sin(2 * np.pi * 5.5 * t) * np.clip(t / 0.25, 0, 1))
+    w = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.04 * rng.standard_normal(n)
+    a = np.clip(t / 0.05, 0, 1) * np.clip((dur - t) / 0.08, 0, 1)
+    return w * a
+
+
+def western(duration):
+    """Boom-chick guitar in A minor, clip-clop woodblocks and a whistled melody (100 bpm)."""
+    beat = 60 / 100
+    n = int((duration + 3) * SR)
+    L, R = np.zeros(n), np.zeros(n)
+    chords = [[57, 60, 64], [55, 59, 62], [53, 57, 60], [52, 56, 59]]   # Am G F E
+    roots = [45, 43, 41, 40]
+    melody = [[(0, 76, 1), (1, 81, 1.5), (2.5, 79, .5), (3, 76, 1)], [(0, 74, 1), (1, 79, 2), (3, 74, 1)],
+              [(0, 72, 1), (1, 77, 1.5), (2.5, 76, .5), (3, 72, 1)], [(0, 71, 2), (2, 68, 1), (3, 71, 1)]]
+
+    def add(buf, sig, t, g):
+        i = int(t * SR)
+        if i < n:
+            m = min(len(sig), n - i)
+            buf[i:i + m] += sig[:m] * g
+
+    bar, t = 0, 0.0
+    while t < duration:
+        c, r = chords[bar % 4], roots[bar % 4]
+        for b in range(4):
+            tb = t + b * beat
+            if b in (0, 2):
+                s = pluck(midi(r - 12 + (7 if b == 2 else 0)), 0.8, 0.25, 0.994)
+                add(L, s, tb, 0.4); add(R, s, tb, 0.4)
+            else:
+                for k, note in enumerate(c):
+                    s = pluck(midi(note), 0.5, 0.5, 0.992)
+                    add(L, s, tb + k * 0.01, 0.13); add(R, s, tb + k * 0.01 + 0.005, 0.13)
+            for h, f in ((0, 950), (0.55, 720)):   # clip-clop
+                w = tone(f, 0.05, 80, ((1, 1), (2.7, .3))) * 0.12
+                add(L, w, tb + h * beat, 0.9); add(R, w, tb + h * beat, 0.7)
+        if 1 <= bar and t + 4 * beat < duration - 1:
+            for off, m, d in melody[bar % 4]:
+                wsig = whistle(midi(m), d * beat * 0.95)
+                add(L, wsig, t + off * beat, 0.07); add(R, wsig, t + off * beat, 0.08)
+        bar += 1
+        t += 4 * beat
+    return L, R
+
+
 def main():
     cues = json.loads((HERE / 'sfx.json').read_text())
     duration = cues['duration']
     n = int(duration * SR)
-    mL, mR = music(duration)
+    mL, mR = western(duration) if cues.get('music') == 'western' else music(duration)
     fade = np.ones(n)
     fin = int(0.4 * SR)
     fade[:fin] = np.linspace(0, 1, fin)

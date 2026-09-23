@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffee's Still Hot</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #1c1c1c; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #stage { width: 1920px; height: 1080px; flex: none; transform-origin: center; }
+  svg { display: block; }
+  .hand { font-family: Gaegu, 'Patrick Hand', cursive; font-weight: 700; }
+  .pen { font-family: 'Patrick Hand', cursive; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 15px sans-serif; background: #fff; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  body.live #replay { display: block; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<button id="replay">↻ Replay</button>
+<script src="kit.js"></script>
+<script>
+// Coffee's Still Hot: the old way eats the whole day at the agent's desk; rewind, QuickQuote it in 3 minutes.
+const DY = 812;                                   // desk surface the critter stands on
+const T = {
+  lamp: 0.3, buzz: [1.8, 2.7], notify: [1.95, 3.4], excite: 2.3,
+  montage: [3.4, 7.0], forever: [5.6, 6.9], rewind: [7.0, 7.7], wait: [7.75, 8.7], walk: [8.5, 9.0],
+  taps: [9.3, 9.9, 10.5, 11.1], button: 11.7, pop: 12.05, catch: 12.9, quoted: [13.0, 15.0],
+  back: [15.2, 16.4], end: 16.6,
+};
+const PHS = { x: 1230, y: 585, s: 0.78 };
+const HOME = 850, TAP_X = 980, END_X = 500;
+const { back, cam, overlay, world, svg } = setupStage('#F3E7D3');
+const defs = svg.querySelector('defs');
+defs.insertAdjacentHTML('beforeend', '<clipPath id="win"><rect x="104" y="124" width="352" height="362" rx="8"/></clipPath>');
+
+// ---- wall: window with a sky that turns to dusk, clock, cork board, lamp
+const winSky = el('rect', { x: 104, y: 124, width: 352, height: 362, fill: '#CFE5F2' }, cam);
+const winIn = el('g', { 'clip-path': 'url(#win)' }, cam);
+const sunG = el('g', {}, winIn); ell(sunG, 0, 0, 46, 46, '#F4C969', { sw: 4 });
+const cloud = el('g', {}, winIn); ell(cloud, 0, 0, 52, 22, PAPER, { sw: 3.5, hatch: false }); ell(cloud, 30, -14, 30, 20, PAPER, { sw: 3.5, hatch: false });
+rrect(cam, 96, 116, 368, 378, 10, null, { sw: 6 });
+line(cam, [[280, 120], [280, 490]], { sw: 5 }); line(cam, [[100, 305], [460, 305]], { sw: 5 });
+rrect(cam, 80, 488, 400, 22, 6, '#E2CBA8', { sw: 4 });
+// clock
+const clockWrap = el('g', {}, cam), clock = el('g', { transform: 'translate(960 200)' }, clockWrap);
+ell(clock, 0, 0, 80, 80, PAPER, { sw: 5.5, hatch: false });
+for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; line(clock, [[Math.sin(a) * 62, -Math.cos(a) * 62], [Math.sin(a) * 70, -Math.cos(a) * 70]], { sw: i % 3 ? 3 : 5 }); }
+const hourH = el('g', {}, clock); line(hourH, [[0, 6], [0, -38]], { sw: 7 });
+const minH = el('g', {}, clock); line(minH, [[0, 8], [0, -58]], { sw: 4.5, stroke: CORAL_DK });
+ell(clock, 0, 0, 6, 6, INK, { single: true, sw: 2 });
+const note3 = el('g', {}, clockWrap); rrect(note3, -70, -40, 140, 80, 6, '#DDEEDD', { sw: 3.5 }); text(note3, 0, 12, 'only 3 min!', { size: 32, fill: GREEN_DK });
+// cork board with notes
+const cork = el('g', {}, cam);
+rrect(cork, 1262, 110, 500, 350, 10, '#D9B383', { sw: 5 });
+const NOTES = [[1330, 180, '#F6E27A', 'Renewals!', -4], [1500, 190, '#F7C1B8', 'Call carrier', 3], [1660, 185, PAPER, 'Sept', -2]].map(([x, y, c, s, r]) => {
+  const g = el('g', { transform: `translate(${x} ${y}) rotate(${r})` }, cork); rrect(g, -62, -46, 124, 92, 5, c, { sw: 3.5 }); text(g, 0, 8, s, { cls: 'pen', size: 26 });
+  ell(g, 0, -40, 6, 6, CORAL, { single: true, sw: 2, hatch: false }); return g;
+});
+const EXTRA = [[1360, 330, '#F6E27A', 'ACORD??', 6], [1480, 360, '#F7C1B8', 'loss runs', -5], [1610, 320, '#DCE8F2', 'call back', 4], [1700, 390, '#F6E27A', 'URGENT', -7], [1420, 250, PAPER, 'supp. app', 8]].map(([x, y, c, s, r], i) => {
+  const g = el('g', {}, cork); rrect(g, -60, -40, 120, 80, 5, c, { sw: 3.5 }); text(g, 0, 8, s, { cls: 'pen', size: 24 });
+  return { g, x, y, r, at: 0.2 + i * 0.15 };
+});
+// lamp and its light
+const light = el('path', { d: 'M1560 520 L1624 546 L1760 812 L1420 812 Z', fill: '#FFE7A0', opacity: 0 }, cam);
+const lamp = el('g', {}, cam);
+ell(lamp, 1700, DY - 8, 70, 14, INK, { single: true, sw: 3, hatch: false });
+line(lamp, [[1700, DY - 16], [1660, 640], [1590, 540]], { sw: 7 });
+poly(lamp, [[1540, 500], [1620, 540], [1600, 572], [1520, 540]], GREEN, { sw: 4.5, j: 1 });
+
+// ---- desk
+rrect(cam, -40, 770, 2000, 66, 6, '#DDB483', { sw: 5 });
+rrect(cam, -40, 834, 2000, 300, 0, '#C99466', { sw: 5 });
+[[40, 800, 360], [700, 790, 300], [1300, 805, 420]].forEach(([x, y, w]) => line(cam, [[x, y], [x + w, y + 2]], { sw: 2, stroke: '#B98555' }));
+rrect(cam, 520, 870, 380, 140, 8, '#D6A677', { sw: 4 }); ell(cam, 710, 940, 16, 10, INK, { single: true, sw: 2, hatch: false });
+// in-tray and plant
+const tray = el('g', {}, cam);
+poly(tray, [[296, DY], [480, DY], [496, DY - 58], [280, DY - 58]], '#9FB9C9', { sw: 4.5 });
+text(tray, 388, DY - 18, 'IN', { size: 34 });
+rrect(cam, 150, DY - 62, 74, 62, 10, CORAL, { sw: 4 });
+[-34, -10, 16, 38].forEach((a, i) => { const g = el('g', { transform: `translate(187 ${DY - 62}) rotate(${a})` }, cam); ell(g, 0, -34, 11, 32, i % 2 ? GREEN : GREEN_LT, { sw: 3 }); });
+
+// ---- the paper tower (grows during the montage, un-grows on rewind)
+const SHEETS = [...Array(22)].map((_, k) => {
+  const g = el('g', {}, cam); rrect(g, -80, -14, 160, 28, 4, PAPER, { sw: 3.5, hatch: false }); line(g, [[-50, 0], [40, 1]], { sw: 2, stroke: '#c2b8ae' });
+  const r = rng(40 + k);
+  return { g, k, dx: (r() - 0.5) * 34, rot: (r() - 0.5) * 12, t0: 0.15 + k * 0.14 };
+});
+
+// ---- mug buddy
+const mug = el('g', {}, cam), mugBody = el('g', {}, mug);
+ell(mugBody, 52, -54, 22, 26, null, { sw: 7, single: true });
+rrect(mugBody, -46, -108, 92, 108, 16, SKY, { sw: 4.5 });
+const mugHappy = el('g', {}, mugBody); [-16, 16].forEach((x) => ell(mugHappy, x, -64, 5, 6, INK, { single: true, sw: 1, hatch: false })); line(mugHappy, [[-10, -46], [0, -40], [10, -46]], { sw: 4 });
+const mugSad = el('g', {}, mugBody); [-16, 16].forEach((x) => line(mugSad, [[x - 6, -62], [x + 6, -64]], { sw: 4 })); line(mugSad, [[-10, -40], [0, -46], [10, -40]], { sw: 4 });
+[-26, 26].forEach((x) => ell(mugBody, x, -50, 9, 5, BLUSH, { stroke: null, hatch: false }));
+const steam = [-18, 0, 18].map((x, i) => { const g = el('g', {}, mug); line(g, [[x, -120], [x + 8, -140], [x, -160], [x + 8, -180]], { sw: 4, stroke: '#9d948c' }); return { g, ph: i * 0.33 }; });
+const hearts = [-20, 16].map((x) => { const g = el('g', {}, mug); sketch(g, `M${x} -130 C${x - 12} -142 ${x - 8} -154 ${x} -146 C${x + 8} -154 ${x + 12} -142 ${x} -130 Z`, null, CORAL, { sw: 2.5, hatch: false }); return g; });
+
+// ---- hero and props
+const phoneStand = el('g', {}, cam); poly(phoneStand, [[PHS.x - 60, DY], [PHS.x + 60, DY], [PHS.x + 20, DY - 50], [PHS.x - 20, DY - 50]], '#8A8FA0', { sw: 4 });
+const phone = makePhone(cam);
+const pal = makeCritter(cam, { variant: 'sprout' });
+const heldCard = el('g', { transform: 'translate(178 -268) rotate(-8) scale(0.85)' }, pal.held); drawCard(heldCard);
+const flyCard = el('g', {}, cam); drawCard(flyCard);
+const sparkles = makeSparkles(cam, [[-190, -250], [180, -300], [200, 60], [-200, 120]]);
+const confetti = makeConfetti(cam, { seed: 31 });
+const notify = bubble(cam, 230, 86, [-40, 150], ['New cannabis', 'account! 🌿'], 44);
+const forever = bubble(cam, 260, 70, [140, 130], ['This is taking forever…'], 42);
+const wait = bubble(cam, 230, 70, [150, 130], ['Wait… QuickQuote!'], 44);
+const quoted = bubble(cam, 200, 88, [150, 150], ['QUOTED!'], 80);
+const fx = el('g', {}, world);
+const rw = el('g', {}, fx); text(rw, 120, 110, '◀◀ REWIND', { anchor: 'start', size: 56, fill: CORAL_DK });
+const scan = [0, 1, 2].map(() => { const g = el('g', {}, fx); line(g, [[0, 0], [1920, 2]], { sw: 3, stroke: '#ffffff' }); return g; });
+const end = makeEndCard(overlay, { line1: 'Quote before your coffee cools.', line2: 'Cannabis indications in 3 minutes or less.' });
+
+const CAM = [[0, 960, 540, 1], [3.4, 960, 540, 1], [7.0, 900, 560, 1.07], [7.7, 960, 540, 1], [8.9, 960, 540, 1], [9.2, 1080, 580, 1.15], [12.3, 1080, 580, 1.15], [12.9, 960, 540, 1]];
+const palX = (t) => (t < T.walk[0] ? HOME : t < T.back[0] ? lerp(HOME, TAP_X, inOut(P(t, ...T.walk))) : lerp(TAP_X, END_X, inOut(P(t, ...T.back))));
+const ROWS_W = ROW_Y.map((y) => PHS.y + y * PHS.s);
+const TAPS = [...T.taps.map((c, i) => [c, (DY - 118) - ROWS_W[i]]), [T.button, 0]];
+// montage clock: runs forward 0..3.6 s, then rewinds to 0
+const tau = (t) => (t < T.montage[0] ? 0 : t < T.montage[1] ? t - T.montage[0] : 3.6 * (1 - inOut(P(t, ...T.rewind))));
+
+function draw(t) {
+  boil(t);
+  const [cx, cy, cz] = keys(CAM, t); camera(cam, cx, cy, cz);
+  const u = tau(t), m = u / 3.6, rewinding = t > T.rewind[0] && t < T.rewind[1];
+
+  // day slipping away
+  winSky.setAttribute('fill', lerpColor('#CFE5F2', '#F2B98A', m));
+  setT(sunG, `translate(${f1(lerp(170, 420, m))} ${f1(lerp(210, 470, m) - Math.sin(m * Math.PI) * 90)})`);
+  setT(cloud, `translate(${f1(210 + (t * 12) % 400 + m * 300)} 250)`);
+  const minA = m * 8 * 360 + clamp((t - 9.0) / 3.0) * 18 * (t > T.rewind[1] ? 1 : 0);
+  setT(minH, `rotate(${f1(minA)})`); setT(hourH, `rotate(${f1(270 + m * 240 + (minA % 360) / 12 * (t > T.rewind[1] ? 1 : 0))})`);
+  const n3 = outBack(P(t, 12.2, 12.6), 2.2); setO(note3, n3 > 0 ? 1 : 0); setT(note3, `translate(1090 210) rotate(6) scale(${Math.max(0.001, n3).toFixed(3)})`);
+  EXTRA.forEach((e) => { const k = outBack(P(m, e.at, e.at + 0.08), 2.4); setO(e.g, k > 0.01 ? 1 : 0); setT(e.g, `translate(${e.x} ${e.y}) rotate(${e.r}) scale(${Math.max(0.001, k).toFixed(3)})`); });
+  setO(light, 0.4 * P(t, T.lamp, T.lamp + 0.15));
+
+  // tower
+  SHEETS.forEach((s) => {
+    const d = u - s.t0;
+    if (d <= 0) { setO(s.g, 0); return; }
+    const k = clamp(d / 0.35), lean = m * m * (s.k / 22) * 40;
+    const tx = 388 + s.dx + lean, ty = DY - 70 - s.k * 26;
+    const x = lerp(388, tx, outCubic(k)), y = lerp(DY - 60, ty, outCubic(k)) - Math.sin(Math.PI * k) * 160;
+    setO(s.g, 1);
+    setT(s.g, `translate(${f1(x)} ${f1(y)}) rotate(${f1(s.rot + (1 - k) * 200 + (u > 2 ? Math.sin(t * 10 + s.k) * 1.5 : 0))})`);
+  });
+
+  // mug
+  const cold = m > 0.5, mugHop = hop(t, 13.1, 0.4, 40) + hop(t, 13.6, 0.35, 28);
+  setT(mug, `translate(640 ${f1(DY - mugHop)})`);
+  setT(mugBody, `rotate(${f1(cold ? -4 : Math.sin(t * 2) * 2)})`);
+  setO(mugHappy, cold ? 0 : 1); setO(mugSad, cold ? 1 : 0);
+  steam.forEach((s) => { const p = ((t * 0.7 + s.ph) % 1); setO(s.g, (1 - m * 2.2) * Math.sin(Math.PI * p) * (t > T.catch ? 0 : 1)); setT(s.g, `translate(0 ${f1(-p * 30)})`); });
+  hearts.forEach((h, i) => { const p = ((t * 0.6 + i * 0.5) % 1); setO(h, t > T.catch ? Math.sin(Math.PI * p) : 0); setT(h, `translate(0 ${f1(-p * 40)})`); });
+
+  // phone
+  const buzz = t > T.buzz[0] && t < T.buzz[1] ? Math.sin(t * 80) * 6 : 0;
+  const pOut = 1 - 0.85 * P(t, 15.4, 16.1);
+  setO(clockWrap, 1 - 0.85 * P(t, 15.4, 16.1));
+  setO(phone.g, pOut); setO(phoneStand, pOut); setO(cork, 1 - 0.8 * P(t, 15.4, 16.1)); setO(lamp, 1 - 0.8 * P(t, 15.4, 16.1)); setO(light, 0.4 * P(t, T.lamp, T.lamp + 0.15) * (1 - P(t, 15.4, 16.1)));
+  setT(phone.g, `translate(${f1(PHS.x + buzz)} ${PHS.y}) rotate(${f1(buzz * 0.4)}) scale(${PHS.s * (1 + bump(t, T.pop, 0.3, 0.03))})`);
+  phone.update(t, T.taps, T.button);
+  updateSparkles(sparkles, t, 7.85, PHS.x, PHS.y);
+
+  // critter
+  const wk = walker(palX, t);
+  let jump = hop(t, T.excite, 0.42, 70) + hop(t, T.excite + 0.45, 0.36, 40) + (t > T.catch ? hop(t, T.catch + 0.1, 0.5, 90) + hop(t, T.catch + 0.7, 0.45, 60) : 0);
+  let sq = 1 - (t > T.montage[0] && t < T.rewind[1] ? 0.12 * m : 0), aR = null, sR = 1, aL = null, sL = 1, face = 'smile', look = 0;
+  TAPS.forEach(([c, J]) => { jump += tapJump(t, c, J); sq -= bump(t, c + 0.4, 0.16, 0.08); });
+  if (t > T.notify[0] && t < T.notify[1]) { face = 'happy'; look = 6; }
+  if (m > 0.3 && !rewinding) { face = 'worried'; look = -6; }
+  if (rewinding) face = 'o';
+  if (t > T.wait[0] && t < T.wait[1]) { face = 'open'; look = 6; const k = bump(t, T.wait[0], 0.9, 1); aR = -50 * k; sR = 1 + k; }
+  if (t > T.walk[1] && t < T.catch) { look = 6; face = TAPS.some(([c]) => t > c - 0.36 && t < c + 0.3) ? 'o' : 'smile'; }
+  T.taps.forEach((c) => { const k = reach(t, c); if (k > 0) { aR = 0; sR = lerp(1, (PHS.x - 101 * PHS.s - (TAP_X + 112)) / 38, k); } });
+  { const k = reach(t, T.button); if (k > 0) { aR = lerp(0, 30, k); sR = lerp(1, 2.5, k); } }
+  if (t >= T.catch - 0.15) { const k = outBack(P(t, T.catch - 0.15, T.catch + 0.1), 1.6); aR = lerp(aR ?? 0, -60, k); sR = lerp(sR, 2.4, k); face = 'happy'; }
+  pal.pose({ x: wk.x, y: DY - wk.bob - jump, t, walk: wk.walk, amp: wk.amp, air: jump > 4, face, look, aR, sR, aL, sL, sq });
+  setO(pal.held, t >= T.catch ? 1 : 0);
+
+  // indication pops out of the phone into the critter's hand
+  if (t >= T.pop && t < T.catch) {
+    const k = inOut(P(t, T.pop, T.catch)), tgt = [TAP_X + 178 * 0.85 + 30, DY - 268];
+    const x = lerp(PHS.x, tgt[0], k), y = lerp(PHS.y - 240, tgt[1], k) - Math.sin(Math.PI * k) * 200;
+    setO(flyCard, 1); setT(flyCard, `translate(${f1(x)} ${f1(y)}) rotate(${f1(k * -360)}) scale(${(0.5 + 0.35 * k).toFixed(3)})`);
+  } else setO(flyCard, 0);
+  confetti.update(t, T.catch, TAP_X + 170, DY - 270, DY);
+
+  // bubbles, rewind fx, end
+  showBubble(notify, t, ...T.notify, 1180, 250, 1.5);
+  showBubble(forever, t, ...T.forever, 640, 470, 1);
+  showBubble(wait, t, ...T.wait, 640, 470, 1);
+  showBubble(quoted, t, ...T.quoted, 700, 400, 2);
+  setO(rw, rewinding ? (Math.floor(t * 6) % 2 ? 1 : 0.4) : 0);
+  scan.forEach((g, i) => { setO(g, rewinding ? 0.6 : 0); setT(g, `translate(0 ${f1(((t * 900 + i * 360) % 1080))})`); });
+  end.update(t, T.end);
+}
+
+run({
+  duration: 21.5, draw, music: 'uke',
+  sfx: [
+    { t: T.lamp, k: 'click' }, { t: T.buzz[0], k: 'buzz' }, { t: T.notify[0] + 0.02, k: 'pop' }, { t: T.excite, k: 'boing' },
+    ...SHEETS.filter((s) => s.k % 2 === 0).map((s) => ({ t: T.montage[0] + s.t0, k: 'paper' })),
+    ...Array.from({ length: 18 }, (_, i) => ({ t: T.montage[0] + i * 0.2, k: 'tick' })),
+    ...EXTRA.map((e) => ({ t: T.montage[0] + e.at * 3.6, k: 'pop2' })), { t: T.forever[0], k: 'pop2' },
+    { t: T.rewind[0], k: 'scratch' }, { t: T.rewind[0] + 0.05, k: 'whoosh' },
+    { t: T.wait[0], k: 'pop' }, { t: 7.9, k: 'sparkle' }, ...steps(T.walk[0], T.walk[1], 0.13),
+    ...T.taps.map((c) => ({ t: c - 0.3, k: 'hop' })), ...[...T.taps, T.button].map((c) => ({ t: c, k: 'click' })),
+    ...T.taps.map((c) => ({ t: c + 0.05, k: 'scribble' })), ...T.taps.map((c) => ({ t: c + 0.12, k: 'ding' })),
+    { t: T.pop, k: 'whoosh' }, { t: 12.2, k: 'pop2' }, { t: T.catch, k: 'chime' }, { t: T.catch + 0.05, k: 'confetti' },
+    { t: T.quoted[0], k: 'pop' }, { t: 13.1, k: 'boing' }, ...steps(T.back[0], T.back[1], 0.14),
+    { t: T.end, k: 'pop' }, { t: T.end + 0.3, k: 'pop2' }, { t: T.end + 0.6, k: 'scribble' },
+    { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
+  ],
+});
+</script>
+</body>
+</html>

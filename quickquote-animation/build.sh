@@ -15,3 +15,7 @@ render index.html quickquote.mp4
 render sketch.html quickquote-sketch.mp4
 render sketch.html quickquote-sketch-sprout.mp4 char=sprout
 render sketch.html quickquote-sketch-cowboy.mp4 char=cowboy
+# concept cuts (shared kit.js)
+render western.html concept-western.mp4
+render desk.html concept-desk.mp4
+render vending.html concept-vending.mp4

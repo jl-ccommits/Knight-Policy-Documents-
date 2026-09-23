@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Quote Machine</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #1c1c1c; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #stage { width: 1920px; height: 1080px; flex: none; transform-origin: center; }
+  svg { display: block; }
+  .hand { font-family: Gaegu, 'Patrick Hand', cursive; font-weight: 700; }
+  .pen { font-family: 'Patrick Hand', cursive; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 15px sans-serif; background: #fff; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  body.live #replay { display: block; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<button id="replay">↻ Replay</button>
+<script src="kit.js"></script>
+<script>
+// The Quote Machine: pop in the basics, crank the handle, a capsule rolls out with the indication.
+const FY = 880;
+const T = {
+  walkIn: [0.2, 2.6], lightsOn: 2.6, ooh: [2.8, 3.9], drop: 3.9, walk2: [4.3, 4.9],
+  presses: [5.3, 6.0, 6.7], crank: [7.2, 8.8], dropCap: [8.85, 9.35], roll: [9.4, 10.0], open: 10.3, lift: 10.55,
+  quoted: [10.8, 12.8], walk3: [12.9, 14.0], end: 14.2,
+};
+const HOME = 640, MX = 860, END_X = 500;
+const { back, cam, overlay, world } = setupStage('#EFE4D6');
+
+// ---- room
+rrect(cam, -40, 640, 2000, 250, 0, '#E6D6C2', { stroke: null });
+line(cam, [[-40, 640], [1960, 642]], { sw: 4 }); line(cam, [[-40, 656], [1960, 658]], { sw: 2 });
+rrect(cam, -40, FY, 2000, 240, 0, '#DCC9B1', { stroke: null });
+line(cam, [[-40, FY], [1960, FY + 2]], { sw: 4.5 });
+[930, 990, 1060].forEach((y) => line(cam, [[-40, y], [1960, y + 2]], { sw: 2, stroke: '#BFA88C' }));
+// plant + framed "employee of the month"
+rrect(cam, 110, FY - 110, 110, 110, 14, '#C9564A', { sw: 4.5 });
+[-40, -18, 6, 28, 46].forEach((a, i) => { const g = el('g', { transform: `translate(165 ${FY - 110}) rotate(${a})` }, cam); ell(g, 0, -70, 18, 66, i % 2 ? GREEN : GREEN_LT, { sw: 3.5 }); });
+const frame = el('g', {}, cam);
+rrect(frame, 330, 230, 200, 240, 8, '#E9B949', { sw: 5 });
+rrect(frame, 352, 252, 156, 150, 4, PAPER, { sw: 3, hatch: false });
+{ const g = el('g', { transform: 'translate(430 392) scale(0.5)' }, frame); makeCritter(g, { variant: 'sprout' }).pose({ x: 0, y: 0, face: 'happy' }); }
+text(frame, 430, 440, 'Critter of', { cls: 'pen', size: 22 }); text(frame, 430, 462, 'the month', { cls: 'pen', size: 22 });
+
+// ---- the vending machine
+const vm = el('g', {}, cam), vmIn = el('g', {}, vm);
+rrect(vmIn, 1000, FY - 24, 60, 24, 6, INK, { single: true, sw: 2 }); rrect(vmIn, 1360, FY - 24, 60, 24, 6, INK, { single: true, sw: 2 });
+rrect(vmIn, 980, 230, 460, 628, 26, CORAL, { sw: 5.5 });
+rrect(vmIn, 990, 240, 440, 90, 16, CORAL_DK, { sw: 4.5 });
+text(vmIn, 1210, 304, 'QuickQuote', { size: 66, fill: '#fff' });
+poly(vmIn, [[1396, 262], [1382, 290], [1394, 290], [1386, 314], [1410, 282], [1397, 282], [1405, 262]], MUSTARD, { sw: 3, j: 0.6 });
+const BULBS = [...Array(11)].map((_, i) => { const g = el('g', {}, vmIn); const x = 1010 + i * 40; ell(g, x, 234, 8, 8, PAPER, { sw: 2.5, hatch: false, single: true }); ell(g, x, 336, 8, 8, PAPER, { sw: 2.5, hatch: false, single: true }); const on = el('g', {}, g); ell(on, x, 234, 8, 8, MUSTARD, { sw: 2.5, hatch: false, single: true }); ell(on, x, 336, 8, 8, MUSTARD, { sw: 2.5, hatch: false, single: true }); return on; });
+// window with capsules and gears
+rrect(vmIn, 1170, 360, 250, 350, 14, '#DCEBF2', { sw: 4.5 });
+[450, 560, 660].forEach((y) => line(vmIn, [[1176, y], [1414, y + 1]], { sw: 3 }));
+function capsule(parent, color, label) {
+  const g = el('g', {}, parent);
+  sketch(g, 'M-30 0 A30 30 0 0 1 30 0 Z', null, color, { sw: 3.5 });
+  sketch(g, 'M-30 0 A30 30 0 0 0 30 0 Z', null, PAPER, { sw: 3.5, hatch: false });
+  text(g, 0, -8, label, { cls: 'pen', size: 20, fill: '#fff' });
+  return g;
+}
+const CAPS = [['GL', BRAND, 1215, 420], ['PROD', GREEN, 1295, 420], ['PROP', SKY, 1375, 420], ['IM', MUSTARD, 1215, 630], ['GL', BRAND, 1295, 630], ['PROD', GREEN, 1375, 630]].map(([l, c, x, y]) => { const g = capsule(vmIn, c, l); setT(g, `translate(${x} ${y})`); return g; });
+const glow = el('g', {}, vmIn); ell(glow, 1215, 420, 42, 42, null, { sw: 4, stroke: MUSTARD, single: true });
+function gear(parent, r, n) {
+  const pts = []; for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * Math.PI * 2, rr = i % 2 ? r * 0.78 : r; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); }
+  const g = el('g', {}, parent); poly(g, pts, '#B7C2C9', { sw: 3, j: 0.6, close: true }); ell(g, 0, 0, r * 0.28, r * 0.28, PAPER, { sw: 3, hatch: false, single: true });
+  return g;
+}
+const gearA = gear(vmIn, 38, 9), gearB = gear(vmIn, 28, 7);
+// control panel
+rrect(vmIn, 1006, 420, 140, 74, 10, '#2E3A34', { sw: 4 });
+const disp = text(vmIn, 1076, 470, '0:00', { cls: 'pen', size: 40, fill: '#9BE3A8' });
+const BTNS = ['COVERAGE', 'ELIGIBILITY', 'RATE'].map((lab, i) => {
+  const y = 520 + i * 65, g = el('g', {}, vmIn);
+  rrect(g, 1010, y, 132, 48, 24, PAPER, { sw: 3.5, hatch: false });
+  text(g, 1086, y + 31, lab, { cls: 'pen', size: 19 });
+  const led = el('g', {}, g); ell(led, 1030, y + 24, 8, 8, '#8FD8A0', { sw: 2.5, single: true, hatch: false });
+  return { g, led, y };
+});
+// tray with flap
+rrect(vmIn, 1170, 740, 250, 100, 14, '#4A3F3A', { sw: 4.5 });
+const flap = el('g', {}, vmIn); rrect(flap, 1176, 744, 238, 36, 10, '#F1D2C8', { sw: 3.5 });
+// crank on the left side
+const crankHub = [982, 700];
+ell(vmIn, crankHub[0], crankHub[1], 16, 16, INK, { single: true, sw: 2, hatch: false });
+const crank = el('g', {}, vmIn); line(crank, [[0, 0], [-70, 0]], { sw: 8 }); ell(crank, -70, 0, 15, 15, MUSTARD, { sw: 3.5 });
+
+// ---- the rolling capsule, the forms stack, the critter
+const rollCap = capsule(cam, BRAND, 'GL');
+const pal = makeCritter(cam, { variant: 'sprout' });
+const stack = el('g', {}, pal.held);
+const STACK_N = 8;
+[...Array(STACK_N)].forEach((_, i) => { const g = el('g', { transform: `translate(${[4, -6, 8, -4, 6, -8, 3, -2][i]} ${-286 - i * 22}) rotate(${[3, -4, 2, -3, 5, -2, 4, -5][i]})` }, stack); rrect(g, -86, -12, 172, 24, 4, PAPER, { sw: 3.5, hatch: false }); });
+const dropped = [...Array(STACK_N)].map((_, i) => { const g = el('g', {}, cam); rrect(g, -86, -12, 172, 24, 4, PAPER, { sw: 3.5, hatch: false }); line(g, [[-60, 0], [30, 1]], { sw: 2, stroke: '#c2b8ae' }); const r = rng(60 + i); return { g, i, px: 380 + r() * 280, rot: (r() - 0.5) * 70, spin: (r() - 0.5) * 500, delay: i * 0.04 }; });
+const handCap = capsule(pal.held, BRAND, 'GL'), capTop = el('g', {}, pal.held);
+sketch(capTop, 'M-30 0 A30 30 0 0 1 30 0 Z', null, BRAND, { sw: 3.5 }); text(capTop, 0, -8, 'GL', { cls: 'pen', size: 20, fill: '#fff' });
+const heldCard = el('g', {}, pal.held); drawCard(heldCard);
+const sparkles = makeSparkles(cam, [[-150, -120], [150, -170], [170, 60], [-160, 80]]);
+const confetti = makeConfetti(cam, { seed: 41 });
+const ooh = bubble(cam, 220, 70, [140, 130], ['Ooh… QuickQuote!'], 44);
+const quoted = bubble(cam, 200, 88, [150, 150], ['QUOTED!'], 80);
+const end = makeEndCard(overlay, { line1: 'Pop in the basics. Pop out a quote.', line2: 'Cannabis indications in 3 minutes or less.' });
+
+const palX = (t) => (t < T.walkIn[0] ? -260 : t < T.walk2[0] ? lerp(-260, HOME, P(t, ...T.walkIn) * 0.85 + outCubic(P(t, ...T.walkIn)) * 0.15) : t < T.walk3[0] ? lerp(HOME, MX, inOut(P(t, ...T.walk2))) : lerp(MX, END_X, inOut(P(t, ...T.walk3))));
+const CAM = [[0, 960, 540, 1], [4.9, 960, 540, 1], [5.2, 1060, 580, 1.14], [9.2, 1060, 580, 1.14], [9.6, 960, 540, 1]];
+const crankA = (t) => inOut(P(t, ...T.crank)) * Math.PI * 4;
+
+function draw(t) {
+  boil(t);
+  const [cx, cy, cz] = keys(CAM, t); camera(cam, cx, cy, cz);
+
+  // machine
+  const cranking = t > T.crank[0] && t < T.crank[1], party = t > T.quoted[0] && t < T.quoted[1] + 0.5;
+  const speed = cranking || party ? 14 : 5;
+  BULBS.forEach((b, i) => setO(b, t > T.lightsOn && (Math.floor(t * speed) + i) % 3 === 0 ? 1 : 0));
+  setT(vmIn, `translate(${f1(cranking ? Math.sin(t * 50) * 3 : 0)} ${f1(-bump(t, T.quoted[0], 0.35, 12))})`);
+  setO(vm, 1 - 0.85 * P(t, 13.2, 13.9));
+  const pressed = T.presses.map((c) => t >= c);
+  BTNS.forEach((b, i) => { setO(b.led, pressed[i] ? 1 : 0.15); setT(b.g, `translate(${f1(bump(t, T.presses[i], 0.18, 5))} 0)`); });
+  setO(glow, pressed[0] && t < T.dropCap[0] ? 0.5 + 0.5 * Math.sin(t * 8) : 0);
+  const ga = crankA(t);
+  setT(gearA, `translate(1250 510) rotate(${f1(ga * 57.3)})`); setT(gearB, `translate(1312 526) rotate(${f1(-ga * 57.3 * 1.3 + 12)})`);
+  setT(crank, `translate(${crankHub[0]} ${crankHub[1]}) rotate(${f1(ga * 57.3)})`);
+  const secs = clamp((t - T.presses[0]) / (T.crank[1] - T.presses[0])) * 167;
+  disp.textContent = t >= T.dropCap[0] ? 'QUOTED ✓' : `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
+  disp.setAttribute('font-size', t >= T.dropCap[0] ? 26 : 40);
+  // capsule leaves the shelf, drops behind the flap, rolls out to the critter
+  setO(CAPS[0], t < T.dropCap[0] ? 1 : 0);
+  const flapA = bump(t, T.dropCap[1] - 0.05, 0.45, 1);
+  setT(flap, `translate(0 ${f1(flapA * 30)}) scale(1 ${(1 - flapA * 0.5).toFixed(3)})`);
+  if (t >= T.dropCap[0] && t < T.roll[1]) {
+    let x, y, r = 0, vis = 1;
+    if (t < T.dropCap[1]) { const k = inCubic(P(t, ...T.dropCap)); x = lerp(1215, 1290, k); y = lerp(420, 790, k); vis = y < 700 ? 1 : 0; }
+    else if (t < T.roll[0]) { x = 1290; y = 790; vis = 0; }
+    else { const k = outCubic(P(t, ...T.roll)); x = lerp(1290, MX + 150, k); y = lerp(800, FY - 30, P(t, T.roll[0], T.roll[0] + 0.15)) - Math.abs(Math.sin(k * 9)) * 30 * (1 - k); r = -k * 720; }
+    setO(rollCap, vis); setT(rollCap, `translate(${f1(x + (vis ? 0 : 0))} ${f1(y)}) rotate(${f1(r)})`);
+  } else setO(rollCap, 0);
+
+  // critter
+  const wk = walker(palX, t);
+  const carrying = t < T.drop;
+  let jump = 0, sq = 1, aR = null, sR = 1, aL = null, sL = 1, face = 'smile', look = 0, r = 0;
+  if (carrying) { aL = 70 + Math.sin(t * 6) * 8; aR = -70 - Math.sin(t * 6 + 1) * 8; sL = 1.7; sR = 1.7; face = t > T.lightsOn ? 'open' : 'sweat'; r = Math.sin(t * 5) * 4; }
+  if (t > T.ooh[0] && t < T.ooh[1]) { face = 'happy'; look = 8; }
+  jump += hop(t, T.drop + 0.05, 0.4, 40);
+  T.presses.forEach((c, i) => {
+    const J = (FY - 118) - (BTNS[i].y + 24);
+    jump += tapJump(t, c, J); sq -= bump(t, c + 0.4, 0.16, 0.08);
+    const k = reach(t, c); if (k > 0) { aR = 0; sR = lerp(1, (1026 - (MX + 112)) / 38, k); }
+  });
+  if (t > T.walk2[1] && t < T.open) { look = 8; face = T.presses.some((c) => t > c - 0.36 && t < c + 0.3) ? 'o' : 'smile'; }
+  if (cranking || (t > T.crank[0] - 0.2 && t < T.crank[1] + 0.2)) {
+    const a = crankA(t), kx = crankHub[0] + Math.cos(a + Math.PI) * 70, ky = crankHub[1] + Math.sin(a + Math.PI) * 70;
+    const bx = MX + 112, by = FY - 118, dx = kx - bx, dy = ky - by, k = clamp(Math.min(P(t, T.crank[0] - 0.2, T.crank[0]), 1 - P(t, T.crank[1], T.crank[1] + 0.2)));
+    aR = lerp(0, Math.atan2(dy, dx) * 57.3, k); sR = lerp(1, Math.max(0.7, Math.hypot(dx, dy) / 38), k); face = 'o'; sq -= Math.abs(Math.sin(a)) * 0.05;
+  }
+  const holdingCap = t >= T.roll[1] && t < T.lift;
+  if (t >= T.roll[1] - 0.1) { const k = outBack(P(t, T.roll[1] - 0.1, T.roll[1] + 0.15), 1.4); aR = lerp(aR ?? 0, -20, k); sR = lerp(sR, 1.6, k); face = t > T.open ? 'happy' : 'open'; }
+  if (t >= T.lift - 0.1) { const k = outBack(P(t, T.lift - 0.1, T.lift + 0.15), 1.6); aR = lerp(-20, -60, k); sR = lerp(1.6, 2.4, k); }
+  jump += t > T.lift ? hop(t, T.lift + 0.1, 0.5, 90) + hop(t, T.lift + 0.7, 0.45, 60) : 0;
+  pal.pose({ x: wk.x, y: FY - wk.bob - jump, r, t, walk: wk.walk, amp: wk.amp, air: jump > 4, face, look, aR, sR, aL, sL, sq });
+  // forms stack: balanced on the sprout, then dumped on the floor
+  setO(stack, carrying ? 1 : 0);
+  setT(stack, `rotate(${f1(Math.sin(t * 4) * 6)} 0 -290)`);
+  dropped.forEach((d) => {
+    const dt = t - T.drop - d.delay;
+    if (dt < 0) { setO(d.g, 0); return; }
+    const k = clamp(dt / 0.5), x0 = HOME + [4, -6, 8, -4, 6, -8, 3, -2][d.i], y0 = FY - 286 - d.i * 22;
+    setO(d.g, 1);
+    setT(d.g, `translate(${f1(lerp(x0, d.px, outCubic(k)))} ${f1(lerp(y0, FY - 12 - d.i * 6, inCubic(k)) - Math.sin(Math.PI * k) * 60)}) rotate(${f1(lerp(0, d.rot, k) + (k < 1 ? d.spin * dt : 0))})`);
+  });
+  // capsule in hand, top pops, indication rises into the hand
+  setO(handCap, holdingCap || (t >= T.open && t < T.lift + 0.4) ? 1 : 0);
+  setT(handCap, `translate(${f1(112 + 38 * 1.6 * Math.cos(-20 / 57.3) + 18)} ${f1(-118 + 38 * 1.6 * Math.sin(-20 / 57.3) - 10)}) scale(${t > T.open ? (1 - P(t, T.lift, T.lift + 0.4)).toFixed(3) : 1})`);
+  const topK = P(t, T.open, T.open + 0.6);
+  setO(capTop, holdingCap && t < T.open ? 1 : t >= T.open && topK < 1 ? 1 - topK : 0);
+  setT(capTop, `translate(${f1(188 + topK * 80)} ${f1(-148 - Math.sin(Math.PI * topK) * 140 - topK * 40)}) rotate(${f1(topK * 400)})`);
+  const cardK = outBack(P(t, T.open + 0.05, T.lift + 0.1), 1.4);
+  setO(heldCard, t > T.open + 0.05 ? 1 : 0);
+  setT(heldCard, `translate(${f1(lerp(188, 178, cardK))} ${f1(lerp(-150, -268, cardK))}) rotate(-8) scale(${(0.2 + 0.65 * cardK).toFixed(3)})`);
+  updateSparkles(sparkles, t, T.open, wk.x + 180, FY - 230);
+  confetti.update(t, T.quoted[0], 1210, 260, FY);
+
+  showBubble(ooh, t, ...T.ooh, 560, 380, 1);
+  showBubble(quoted, t, ...T.quoted, 470, 400, 2);
+  end.update(t, T.end);
+}
+
+run({
+  duration: 19.5, draw, music: 'uke',
+  sfx: [
+    ...steps(T.walkIn[0] + 0.1, T.walkIn[1], 0.16), { t: T.lightsOn, k: 'sparkle' }, { t: T.ooh[0], k: 'pop' },
+    { t: T.drop, k: 'whoosh' }, ...[0, 1, 2, 3].map((i) => ({ t: T.drop + 0.4 + i * 0.07, k: 'paper' })), ...steps(T.walk2[0], T.walk2[1], 0.14),
+    ...T.presses.map((c) => ({ t: c - 0.3, k: 'hop' })), ...T.presses.map((c) => ({ t: c, k: 'click' })), ...T.presses.map((c) => ({ t: c + 0.06, k: 'blip' })),
+    { t: T.crank[0], k: 'crank' }, { t: T.crank[0] + 0.8, k: 'crank' }, ...Array.from({ length: 8 }, (_, i) => ({ t: T.crank[0] + i * 0.2, k: 'tick' })),
+    { t: T.dropCap[0], k: 'ding' }, { t: T.dropCap[1], k: 'clunk' }, { t: T.roll[0], k: 'swish' },
+    { t: T.open, k: 'pop' }, { t: T.open + 0.05, k: 'sparkle' }, { t: T.lift, k: 'chime' }, { t: T.quoted[0], k: 'confetti' },
+    { t: T.quoted[0] + 0.02, k: 'pop' }, { t: T.lift + 0.1, k: 'boing' }, ...steps(T.walk3[0], T.walk3[1], 0.14),
+    { t: T.end, k: 'pop' }, { t: T.end + 0.3, k: 'pop2' }, { t: T.end + 0.6, k: 'scribble' },
+    { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
+  ],
+});
+</script>
+</body>
+</html>
