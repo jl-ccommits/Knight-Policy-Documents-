@@ -5,6 +5,7 @@ Two cuts:
 | File | Format | Style |
 |---|---|---|
 | `quickquote-sketch.mp4` (`sketch.html`) | 16:9, 1920×1080, 21s | Hand-drawn doodle (boiling pencil lines, paper texture), after Tak's "Oktoberfest" clip |
+| `quickquote-sketch-critter.mp4` (`sketch.html?char=critter`) | 16:9, 1920×1080, 21s | Same sketch cut starring the CARMA critter (see `mascot-critter.png`) |
 | `quickquote.mp4` (`index.html`) | 4:5, 1080×1350, 23.5s | Clean brand/UI demo matching carma365.com |
 
 **Sketch cut:** a coral folder critter walks past the agency. A new cannabis account
@@ -12,6 +13,10 @@ buries it in ACORD forms and loss runs. The QuickQuote phone slides in, the crit
 hop-taps Coverage → Eligibility → Rate → Indication while a stopwatch runs to 2:47,
 and it catches the $1,511 non-binding indication ("QUOTED!"). It ends on the
 CARMA QuickQuote card.
+
+**CARMA critter:** an original blocky mascot in a chunky-doodle style: coral body, stubby legs and
+side nubs, round shiny eyes, a forest-green agent hat with the logo's coral slash as a feather,
+and a green bow tie. Switch characters with `?char=critter` (the default is the folder).
 
 ## Brand cut
 

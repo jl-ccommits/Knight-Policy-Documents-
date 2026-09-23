@@ -13,7 +13,7 @@ const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });
-await page.goto(pathToFileURL(path.join(here, process.env.PAGE || 'index.html')).href + '?render=1');
+await page.goto(pathToFileURL(path.join(here, process.env.PAGE || 'index.html')).href + '?render=1' + (process.env.QUERY ? '&' + process.env.QUERY : ''));
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(500);
 const [W, H] = await page.evaluate(() => window.STAGE);

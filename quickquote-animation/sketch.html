@@ -107,6 +107,12 @@ const text = (parent, x, y, str, o = {}) => { const t = el('text', { x, y, 'text
 const setT = (node, s) => node.setAttribute('transform', s);
 const setO = (node, o) => { node.setAttribute('opacity', clamp(o).toFixed(3)); node.style.display = o <= 0.001 ? 'none' : ''; };
 
+// ---------- character: ?char=folder (default) or ?char=critter (CARMA's own blocky mascot) ----------
+const params = new URLSearchParams(location.search);
+const CHAR = params.get('char') === 'critter' ? 'critter' : 'folder';
+const HELD_Y = CHAR === 'critter' ? -330 : -282;   // where the indication card is held overhead
+const HOLD_ARM = CHAR === 'critter' ? 3.6 : 2.5;
+
 // ---------- timeline ----------
 const T = {
   walkIn: [0.2, 2.3], excite: 2.5, bubble1: [2.6, 3.9],
@@ -229,11 +235,26 @@ const watchSub = text(watch, 0, 150, 'under 3 min!', { size: 34, fill: GREEN });
 const critter = el('g', {}, world);
 const cBody = el('g', {}, critter);
 const LEGS = [-96, -58, 58, 96].map((x) => { const g = el('g', {}, cBody); rrect(g, x - 14, -44, 28, 44, 6, CORAL, { sw: 4 }); return g; });
-rrect(cBody, -66, -226, 118, 58, 5, PAPER, { sw: 3.5, hatch: false });
-line(cBody, [[-52, -210], [30, -212]], { sw: 2.5, stroke: '#b9aea4' });
-rrect(cBody, -116, -216, 94, 36, 9, CORAL_DK, { sw: 4 });
-rrect(cBody, -124, -194, 248, 168, 16, CORAL, { sw: 5 });
-line(cBody, [[-110, -168], [110, -168]], { sw: 2.5, stroke: CORAL_DK, j: 1.5 });
+if (CHAR === 'folder') {
+  rrect(cBody, -66, -226, 118, 58, 5, PAPER, { sw: 3.5, hatch: false });
+  line(cBody, [[-52, -210], [30, -212]], { sw: 2.5, stroke: '#b9aea4' });
+  rrect(cBody, -116, -216, 94, 36, 9, CORAL_DK, { sw: 4 });
+  rrect(cBody, -124, -194, 248, 168, 16, CORAL, { sw: 5 });
+  line(cBody, [[-110, -168], [110, -168]], { sw: 2.5, stroke: CORAL_DK, j: 1.5 });
+} else {
+  rrect(cBody, -124, -194, 248, 168, 22, CORAL, { sw: 5 });
+  // little agent hat, tilted, with the logo's coral slash as a feather
+  const hat = el('g', { transform: 'rotate(-7 -10 -196)' }, cBody);
+  poly(hat, [[52, -222], [68, -222], [98, -300], [82, -300]], '#EC5F59', { sw: 3.5, j: 0.8 });
+  rrect(hat, -54, -258, 108, 62, 18, GREEN, { sw: 4.5 });
+  rrect(hat, -54, -222, 108, 14, 4, INK, { sw: 2, single: true, hatch: false });
+  ell(hat, 0, -197, 84, 13, '#4E7A51', { sw: 4.5 });
+  ell(hat, 34, -215, 7, 7, MUSTARD, { sw: 2, single: true, hatch: false });
+  // green bow tie
+  poly(cBody, [[-4, -46], [-34, -62], [-34, -30]], GREEN, { sw: 3.5, j: 0.8 });
+  poly(cBody, [[4, -46], [34, -62], [34, -30]], GREEN, { sw: 3.5, j: 0.8 });
+  rrect(cBody, -8, -54, 16, 16, 5, '#4E7A51', { sw: 3, single: true, hatch: false });
+}
 const face = el('g', {}, cBody);
 const eyes = el('g', {}, face);
 const eyeL = el('g', {}, eyes), eyeR = el('g', {}, eyes);
@@ -256,7 +277,7 @@ function drawCard(parent) {
   text(parent, 0, 22, '$1,511', { size: 58, fill: CORAL_DK });
   text(parent, 0, 50, 'non-binding', { cls: 'pen', size: 20, fill: '#8a817a' });
 }
-const heldCard = el('g', { transform: 'translate(0 -282)' }, held); drawCard(heldCard);
+const heldCard = el('g', { transform: `translate(0 ${HELD_Y})` }, held); drawCard(heldCard);
 
 // papers
 const PAPER_LABELS = ['ACORD 125', 'Supplemental', 'Loss runs', 'SOV', 'ACORD 126', 'Class code?', 'Questionnaire', 'Loss runs', 'ACORD 140', 'Supplemental', 'Signed apps', 'Class code?', 'Loss runs', 'ACORD 125'];
@@ -424,7 +445,7 @@ function setTime(t) {
   });
   if (t > T.catch - 0.12) {
     const k = outBack(P(t, T.catch - 0.12, T.catch + 0.1), 1.5);
-    aL = lerp(aL, 112, k); aR = lerp(aR, -112, k); sL = lerp(1, 2.5, k); sR = lerp(sR, 2.5, k);
+    aL = lerp(aL, 112, k); aR = lerp(aR, -112, k); sL = lerp(1, HOLD_ARM, k); sR = lerp(sR, HOLD_ARM, k);
   }
   setT(armL, `translate(-122 ${f1(-120 * sy)})`); setT(armLi, `rotate(${f1(aL)}) scale(${sL.toFixed(3)} 1)`);
   setT(armR, `translate(122 ${f1(-120 * sy)})`); setT(armRi, `rotate(${f1(aR)}) scale(${sR.toFixed(3)} 1)`);
@@ -487,12 +508,12 @@ function setTime(t) {
   if (t >= T.eject && t < T.catch) {
     let cx, cy, cr, cs;
     if (t < T.eject + 0.35) { const k = outCubic(P(t, T.eject, T.eject + 0.35)); cx = PHONE.x; cy = lerp(PHONE.y - 250, PHONE.y - 330, k); cr = 0; cs = lerp(0.4, 1, k); }
-    else { const k = inOut(P(t, T.eject + 0.35, T.catch)); cx = lerp(PHONE.x, CR_X.phone, k); cy = lerp(PHONE.y - 330, GROUND - 282, k) - Math.sin(Math.PI * k) * 120; cr = k * 360; cs = 1; }
+    else { const k = inOut(P(t, T.eject + 0.35, T.catch)); cx = lerp(PHONE.x, CR_X.phone, k); cy = lerp(PHONE.y - 330, GROUND + HELD_Y, k) - Math.sin(Math.PI * k) * 120; cr = k * 360; cs = 1; }
     setO(flyCard, 1); setT(flyCard, `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(cr)}) scale(${cs.toFixed(3)})`);
   } else setO(flyCard, 0);
   const im = t > T.catch && t < T.catch + 0.9 ? 1 - P(t, T.catch + 0.5, T.catch + 0.9) : 0;
   setO(impact, im);
-  setT(impact, `translate(${f1(x)} ${f1(y - bob - 282)}) scale(${(0.8 + 0.25 * Math.abs(Math.sin(t * 14))).toFixed(3)})`);
+  setT(impact, `translate(${f1(x)} ${f1(y - bob + HELD_Y)}) scale(${(0.8 + 0.25 * Math.abs(Math.sin(t * 14))).toFixed(3)})`);
 
   // ---- bubbles
   const pop = (a, b) => (t < a || t > b ? 0 : Math.min(outBack(P(t, a, a + 0.35), 2.2), 1 - inCubic(P(t, b - 0.22, b))));
@@ -505,7 +526,7 @@ function setTime(t) {
     const d = t - 13.1;
     if (d < 0) { setO(c.g, 0); return; }
     let cx, cy;
-    if (c.burst) { cx = CR_X.phone + c.vx * d * Math.exp(-d * 1.2); cy = GROUND - 282 + c.vy * d * Math.exp(-d * 1.2) + 300 * d * d; }
+    if (c.burst) { cx = CR_X.phone + c.vx * d * Math.exp(-d * 1.2); cy = GROUND + HELD_Y + c.vy * d * Math.exp(-d * 1.2) + 300 * d * d; }
     else { cx = c.x0 + Math.sin(d * 2 + c.ph) * c.sway; cy = c.y0 + c.v * d * 1.6; }
     setO(c.g, cy < GROUND + 10 ? (c.burst ? 1 - P(d, 2.2, 3) : 1) : 0);
     setT(c.g, `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(c.spin * d)}) scale(${(0.7 + 0.3 * Math.cos(d * 5 + c.ph)).toFixed(3)} 1)`);
@@ -547,7 +568,6 @@ window.SFX = [
 ];
 
 // ---------- live playback ----------
-const params = new URLSearchParams(location.search);
 function fit() { document.getElementById('stage').style.transform = `scale(${Math.min(innerWidth / W, innerHeight / H)})`; }
 if (!params.has('render')) {
   document.body.classList.add('live');
