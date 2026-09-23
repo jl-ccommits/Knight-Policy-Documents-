@@ -1,5 +1,20 @@
 # CARMA QuickQuote animation
 
+Two cuts:
+
+| File | Format | Style |
+|---|---|---|
+| `quickquote-sketch.mp4` (`sketch.html`) | 16:9, 1920×1080, 21s | Hand-drawn doodle (boiling pencil lines, paper texture), after Tak's "Oktoberfest" clip |
+| `quickquote.mp4` (`index.html`) | 4:5, 1080×1350, 23.5s | Clean brand/UI demo matching carma365.com |
+
+**Sketch cut:** a coral folder critter walks past the agency. A new cannabis account
+buries it in ACORD forms and loss runs. The QuickQuote phone slides in, the critter
+hop-taps Coverage → Eligibility → Rate → Indication while a stopwatch runs to 2:47,
+and it catches the $1,511 non-binding indication ("QUOTED!"). It ends on the
+CARMA QuickQuote card.
+
+## Brand cut
+
 A 23.5-second, 4:5 (1080×1350) promo for QuickQuote, aimed at retail insurance
 agents. A coral folder mascot (from the QuickQuote ad) gets buried in cannabis
 submission paperwork, gobbles it up, then watches an agent run the real four-step
@@ -21,12 +36,14 @@ because its real fields weren't in the reference screenshots.
 ## Re-render
 
 ```sh
-node render.mjs quickquote.mp4 30          # needs playwright; set CHROMIUM / FFMPEG if not on PATH
-python3 sfx.py                              # needs numpy -> soundtrack.wav
-ffmpeg -i quickquote.silent.mp4 -i soundtrack.wav -c:v copy -c:a aac -b:a 192k -shortest quickquote.mp4
+./build.sh      # renders both cuts; needs playwright + numpy; set CHROMIUM / FFMPEG if not on PATH
 ```
 
-Stills for quick checks: `node render.mjs --stills 3.5,6,15.8`
+Stills for quick checks: `PAGE=sketch.html node render.mjs --stills 3.5,6,15.8`
+
+Fonts (Inter Tight, Montserrat, Playfair Display, IBM Plex Mono, Gaegu, Patrick
+Hand; all SIL OFL) are vendored in `fonts/`, so renders don't depend on network
+access to Google Fonts.
 
 ## Brand swap
 

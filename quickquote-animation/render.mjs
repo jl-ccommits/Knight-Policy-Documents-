@@ -1,5 +1,6 @@
 // Renders index.html frame-by-frame with headless Chromium and pipes to ffmpeg.
 // Usage: node render.mjs [out.mp4] [fps]      Stills: node render.mjs --stills 1,5.9,15.5
+// Set PAGE=sketch.html to render the hand-drawn cut (default: index.html).
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -12,7 +13,7 @@ const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });
-await page.goto(pathToFileURL(path.join(here, 'index.html')).href + '?render=1');
+await page.goto(pathToFileURL(path.join(here, process.env.PAGE || 'index.html')).href + '?render=1');
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(500);
 const [W, H] = await page.evaluate(() => window.STAGE);

@@ -102,6 +102,11 @@ SFX = {
     'click': lambda: layer([(0, tone(3200, 0.03, 160) * 0.5),
                             (0, lowpass(noise(0.012), 0.6) * env(int(0.012 * SR), 0.0005, 300) * 0.4)], 0.03),
     'chomp': lambda: layer([(0, sweep(520, 140, 0.12, 22) * 0.8), (0.1, sweep(300, 700, 0.07, 40) * 0.5)], 0.2),
+    'step': lambda: layer([(0, lowpass(noise(0.04), 0.12) * env(int(0.04 * SR), 0.002, 90) * 0.9),
+                           (0, tone(140, 0.05, 60) * 0.35)], 0.05),
+    'hop': lambda: sweep(300, 820, 0.16, 14) * 0.35,
+    'scribble': lambda: (lambda n: lowpass(noise(n / SR), 0.45) * (0.5 + 0.5 * np.sin(np.arange(n) / SR * 2 * np.pi * 22))
+                         * env(n, 0.01, 6) * 0.35)(int(0.24 * SR)),
     'ding': lambda: tone(1568, 0.3, 14, ((1, 1), (2, .25))) * 0.16,
     'type': lambda: layer([(0, tone(1900, 0.025, 180) * 0.25),
                            (0, lowpass(noise(0.02), 0.5) * env(int(0.02 * SR), 0.0005, 200) * 0.3)], 0.025),

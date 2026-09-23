@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickQuote Sketch</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #1c1c1c; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #stage { width: 1920px; height: 1080px; flex: none; transform-origin: center; background: #ECEAE6; }
+  svg { display: block; }
+  .hand { font-family: Gaegu, 'Patrick Hand', cursive; font-weight: 700; }
+  .pen { font-family: 'Patrick Hand', cursive; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 15px sans-serif; background: #fff; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  body.live #replay { display: block; }
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="boil" x="-2%" y="-2%" width="104%" height="104%">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.024" numOctaves="2" seed="1" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+      <line x1="0" y1="0" x2="0" y2="9" stroke="#2a1d17" stroke-width="2.2" opacity=".09"/>
+      <line x1="5" y1="0" x2="5" y2="9" stroke="#fff" stroke-width="1.4" opacity=".16"/>
+    </pattern>
+    <pattern id="scallop" width="22" height="14" patternUnits="userSpaceOnUse">
+      <path d="M0 12 Q5.5 3 11 12 Q16.5 3 22 12" fill="none" stroke="#E8735F" stroke-width="2.2"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1080" fill="#ECEAE6"/>
+  <image id="paperTex" x="0" y="0" width="1920" height="1080" opacity=".55"/>
+  <g id="world" filter="url(#boil)"></g>
+  <g id="endLayer"></g>
+</svg>
+</div>
+<button id="replay">↻ Replay</button>
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const W = 1920, H = 1080, DURATION = 21, GROUND = 880;
+const INK = '#2B211D', CORAL = '#E8735F', CORAL_DK = '#C9564A', GREEN = '#5E8C61', MUSTARD = '#E9B949', SKY = '#7FA9DA', PAPER = '#FFFDF8';
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const P = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const inCubic = (x) => x * x * x;
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const outBack = (x, s = 1.9) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
+const bump = (t, c, d = 0.35, amp = 1) => (t >= c && t <= c + d ? Math.sin(Math.PI * (t - c) / d) * amp : 0);
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+const f1 = (v) => v.toFixed(1);
+
+// ---------- tiny SVG + "sketchy" drawing kit ----------
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+let seedCounter = 100;
+function rrPath(x, y, w, h, r, j, rnd) {
+  const J = () => (rnd() - 0.5) * 2 * j;
+  const p = [[x + r + J(), y + J()], [x + w - r + J(), y + J()], [x + w + J(), y + r + J()], [x + w + J(), y + h - r + J()],
+    [x + w - r + J(), y + h + J()], [x + r + J(), y + h + J()], [x + J(), y + h - r + J()], [x + J(), y + r + J()]];
+  const c = [[x + w, y], [x + w, y + h], [x, y + h], [x, y]];
+  let d = `M${f1(p[0][0])},${f1(p[0][1])}`;
+  for (let e = 0; e < 4; e++) {
+    const a = p[e * 2], b = p[e * 2 + 1], n = p[(e * 2 + 2) % 8];
+    d += ` Q${f1((a[0] + b[0]) / 2 + J())},${f1((a[1] + b[1]) / 2 + J())} ${f1(b[0])},${f1(b[1])}`;
+    d += ` Q${c[e][0]},${c[e][1]} ${f1(n[0])},${f1(n[1])}`;
+  }
+  return d + 'Z';
+}
+function ellPath(cx, cy, rx, ry, j, rnd, n = 40) {
+  let d = '';
+  const ph = rnd() * 6.28, amp = j / Math.max(rx, ry);
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2, k = 1 + Math.sin(a * 3 + ph) * amp + (rnd() - 0.5) * amp * 0.4;
+    d += (i ? 'L' : 'M') + f1(cx + Math.cos(a) * rx * k) + ',' + f1(cy + Math.sin(a) * ry * k);
+  }
+  return d + 'Z';
+}
+function polyPath(pts, j, rnd, close = false) {
+  return 'M' + pts.map(([x, y]) => `${f1(x + (rnd() - 0.5) * j)},${f1(y + (rnd() - 0.5) * j)}`).join(' L') + (close ? 'Z' : '');
+}
+// fill (slightly offset, colored-pencil hatch) + main line + faint second pencil pass
+function sketch(parent, d1, d2, fill, { sw = 4.5, stroke = INK, hatch = true, fillOpacity = 1 } = {}) {
+  const g = el('g', {}, parent);
+  if (fill) {
+    el('path', { d: d1, fill, 'fill-opacity': fillOpacity, transform: 'translate(2.5 2)' }, g);
+    if (hatch) el('path', { d: d1, fill: 'url(#hatch)', transform: 'translate(2.5 2)' }, g);
+  }
+  if (stroke) {
+    el('path', { d: d1, fill: 'none', stroke, 'stroke-width': sw, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    if (d2) el('path', { d: d2, fill: 'none', stroke, 'stroke-width': sw * 0.45, opacity: 0.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  }
+  return g;
+}
+const rrect = (parent, x, y, w, h, r, fill, o = {}) => { const rnd = rng(o.seed ?? seedCounter++); const j = o.j ?? 2; return sketch(parent, rrPath(x, y, w, h, r, j, rnd), o.single ? null : rrPath(x, y, w, h, r, j * 1.6, rnd), fill, o); };
+const ell = (parent, cx, cy, rx, ry, fill, o = {}) => { const rnd = rng(o.seed ?? seedCounter++); const j = o.j ?? 2; return sketch(parent, ellPath(cx, cy, rx, ry, j, rnd), o.single ? null : ellPath(cx, cy, rx, ry, j * 1.5, rnd), fill, o); };
+const poly = (parent, pts, fill, o = {}) => { const rnd = rng(o.seed ?? seedCounter++); const j = o.j ?? 2; return sketch(parent, polyPath(pts, j, rnd, !!fill || o.close), o.single ? null : polyPath(pts, j * 1.6, rnd, !!fill || o.close), fill, o); };
+const line = (parent, pts, o = {}) => poly(parent, pts, null, { single: true, ...o });
+const text = (parent, x, y, str, o = {}) => { const t = el('text', { x, y, 'text-anchor': o.anchor || 'middle', class: o.cls || 'hand', 'font-size': o.size || 40, fill: o.fill || INK, ...(o.attrs || {}) }, parent); t.textContent = str; return t; };
+const setT = (node, s) => node.setAttribute('transform', s);
+const setO = (node, o) => { node.setAttribute('opacity', clamp(o).toFixed(3)); node.style.display = o <= 0.001 ? 'none' : ''; };
+
+// ---------- timeline ----------
+const T = {
+  walkIn: [0.2, 2.3], excite: 2.5, bubble1: [2.6, 3.9],
+  papers0: 3.9, bubble2: [4.9, 6.0], phoneIn: [5.9, 6.5], burst: 6.6,
+  walk2: [7.2, 7.9], taps: [8.2, 9.1, 10.0, 10.9], button: 11.9,
+  eject: 12.25, catch: 13.05, celebrate: [13.2, 13.8, 14.4], phoneOut: [15.4, 16.0], walk3: [15.6, 17.0],
+  end: 16.8,
+};
+const CR_X = { home: 960, phone: 1200, end: 520 };
+const PHONE = { x: 1480, y: 560 };
+const ROW_Y = [-130, -50, 30, 110];
+const BTN_Y = 200;
+const JUMP_FOR = (ly) => (GROUND - 120) - (PHONE.y + ly); // lift so the critter's arm reaches that row
+
+// ================= build the world =================
+const worldRoot = document.getElementById('world');
+const buntingLayer = el('g', {}, worldRoot);
+const world = el('g', {}, worldRoot);   // everything under the camera
+const endLayer = document.getElementById('endLayer');
+
+// paper texture (static, generated once)
+{
+  const c = document.createElement('canvas'); c.width = 960; c.height = 540;
+  const x = c.getContext('2d'), img = x.createImageData(960, 540), r = rng(77);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = r(); const g = v > 0.985 ? 150 : v > 0.93 ? 205 : 245 + r() * 10;
+    img.data[i] = img.data[i + 1] = g; img.data[i + 2] = g - 4; img.data[i + 3] = v > 0.93 ? 60 : 18;
+  }
+  x.putImageData(img, 0, 0);
+  x.globalAlpha = 0.05; x.strokeStyle = '#8a7f72';
+  for (let i = 0; i < 260; i++) { const px = r() * 960, py = r() * 540, a = r() * 6.28, l = 6 + r() * 20; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * l, py + Math.sin(a) * l); x.stroke(); }
+  document.getElementById('paperTex').setAttribute('href', c.toDataURL());
+}
+
+// background doodles
+const bg = el('g', {}, world);
+// agency building (left)
+const agency = el('g', { transform: 'translate(150 0)' }, bg);
+poly(agency, [[88, 618], [262, 512], [436, 618]], '#F2C9BE', { j: 2 });
+rrect(agency, 112, 612, 300, 268, 6, '#F7EADF', { j: 2 });
+rrect(agency, 168, 642, 188, 50, 8, PAPER, { sw: 3.5 });
+text(agency, 262, 678, 'AGENCY', { cls: 'pen', size: 32 });
+rrect(agency, 232, 760, 62, 120, 6, '#E7C6A8', { sw: 3.5 });
+[[140, 720], [322, 720]].forEach(([x, y]) => { rrect(agency, x, y, 62, 52, 4, '#DCE8F2', { sw: 3.5 }); line(agency, [[x + 31, y + 3], [x + 31, y + 50]], { sw: 2.5 }); line(agency, [[x + 3, y + 26], [x + 59, y + 26]], { sw: 2.5 }); });
+// greenhouse (right)
+const greenhouse = el('g', {}, bg);
+sketch(greenhouse, 'M1540 880 L1540 705 Q1542 598 1700 596 Q1858 598 1860 705 L1860 880', 'M1542 880 L1543 708 Q1546 602 1700 600 Q1855 602 1858 708 L1858 880', '#DDEBD8', {});
+[1600, 1660, 1740, 1800].forEach((x) => { const top = 705 - Math.sqrt(Math.max(0, 1 - Math.pow((x - 1700) / 160, 2))) * 100; line(greenhouse, [[x, 878], [x, top + 6]], { sw: 2.5 }); });
+line(greenhouse, [[1542, 760], [1858, 760]], { sw: 2.5 });
+ell(greenhouse, 1700, 668, 38, 38, PAPER, { sw: 3.5 });
+{ // leaf sign
+  const lg = el('g', { transform: 'translate(1700 684)' }, greenhouse);
+  [-60, -30, 0, 30, 60].forEach((a, i) => { const len = [22, 30, 36, 30, 22][i]; const g2 = el('g', { transform: `rotate(${a})` }, lg); ell(g2, 0, -len / 2 - 2, 5, len / 2, GREEN, { sw: 2.2, single: true, j: 0.6 }); });
+  line(lg, [[0, 0], [0, 12]], { sw: 2.5 });
+}
+// little plants
+[[1500, 880], [1880, 880], [470, 880]].forEach(([x, y], k) => { [-30, 0, 30].forEach((a) => { const g2 = el('g', { transform: `translate(${x} ${y}) rotate(${a})` }, bg); ell(g2, 0, -18, 7, 18, GREEN, { sw: 2.5, single: true, j: 0.8 }); }); });
+// ground + grass
+{
+  const r = rng(5), pts = [];
+  for (let x = -20; x <= 1940; x += 40) pts.push([x, GROUND + (r() - 0.5) * 3]);
+  line(bg, pts, { sw: 4, j: 1.5 });
+  line(bg, pts.map(([x, y]) => [x + 7, y + 4]), { sw: 1.6, j: 2, attrs: {} });
+  for (let x = 0; x < 1920; x += 14 + r() * 22) {
+    const h = 6 + r() * 12, a = (r() - 0.5) * 0.7;
+    line(bg, [[x, GROUND + 2], [x + Math.sin(a) * h, GROUND - h]], { sw: 2, j: 0.4 });
+    if (r() > 0.6) line(bg, [[x + 4, GROUND + 2], [x + 4 + Math.sin(-a) * h * 0.7, GROUND - h * 0.7]], { sw: 1.8, j: 0.4 });
+  }
+}
+// bunting
+const bunting = el('g', {}, buntingLayer);
+const FLAGS = [];
+{
+  const B = (u) => [lerp(lerp(-40, 960, u), lerp(960, 1960, u), u), lerp(lerp(92, 178, u), lerp(178, 92, u), u)];
+  const pts = []; for (let i = 0; i <= 40; i++) pts.push(B(i / 40));
+  line(bunting, pts, { sw: 3.5, j: 1 });
+  const N = 22, cols = [CORAL, GREEN, '#F6E9DA'];
+  for (let i = 0; i < N; i++) {
+    const [x, y] = B((i + 0.5) / N);
+    const g = el('g', { transform: `translate(${f1(x)} ${f1(y)})` }, bunting);
+    const inner = el('g', {}, g);
+    const col = cols[i % 3];
+    poly(inner, [[-34, 0], [34, 0], [0, 76]], col, { j: 2, sw: 3.5 });
+    if (col === '#F6E9DA') el('path', { d: 'M-28 4 L28 4 L0 66 Z', fill: 'url(#scallop)', opacity: 0.8 }, inner);
+    FLAGS.push({ inner, ph: i * 0.7 });
+  }
+}
+
+// phone
+const phone = el('g', {}, world);
+const phoneInner = el('g', {}, phone);
+rrect(phoneInner, -160, -290, 320, 580, 42, PAPER, { sw: 5.5, hatch: false });
+rrect(phoneInner, -142, -272, 284, 544, 30, null, { sw: 2, single: true, stroke: '#9a918a' });
+rrect(phoneInner, -42, -262, 84, 22, 11, INK, { sw: 3, single: true, hatch: false });
+text(phoneInner, -118, -196, 'QuickQuote', { anchor: 'start', size: 46 });
+poly(phoneInner, [[102, -238], [86, -206], [100, -206], [90, -178], [118, -214], [103, -214], [112, -238]], CORAL, { sw: 3, j: 0.8 });
+text(phoneInner, -118, -166, 'by CARMA', { anchor: 'start', cls: 'pen', size: 24, fill: '#7a706a' });
+const ROWS = ['Coverage', 'Eligibility', 'Rate', 'Indication'].map((lab, i) => {
+  const y0 = ROW_Y[i];
+  const hi = el('g', {}, phoneInner); rrect(hi, -132, y0 - 32, 264, 64, 16, '#DDEEDD', { stroke: null, hatch: true });
+  rrect(phoneInner, -120, y0 - 19, 38, 38, 7, PAPER, { sw: 3.5, hatch: false });
+  text(phoneInner, -64, y0 + 12, lab, { anchor: 'start', cls: 'pen', size: 36 });
+  const ck = el('path', { d: `M${-113} ${y0 + 1} L${-102} ${y0 + 13} L${-78} ${y0 - 18}`, fill: 'none', stroke: GREEN, 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': 60, 'stroke-dashoffset': 60 }, phoneInner);
+  return { hi, ck };
+});
+const btn = el('g', {}, phoneInner);
+rrect(btn, -130, BTN_Y - 34, 260, 68, 34, CORAL, { sw: 4 });
+text(btn, 0, BTN_Y + 11, 'Get indication', { size: 36, fill: '#fff' });
+
+// stopwatch
+const watch = el('g', {}, world);
+rrect(watch, -12, -74, 24, 18, 4, INK, { single: true, sw: 3 });
+ell(watch, 0, 0, 56, 56, PAPER, { sw: 5, hatch: false });
+const watchHand = el('g', {}, watch); line(watchHand, [[0, 0], [0, -38]], { sw: 5, stroke: CORAL });
+ell(watch, 0, 0, 5, 5, INK, { single: true, sw: 2 });
+const watchText = text(watch, 0, 108, '0:00', { size: 52 });
+const watchSub = text(watch, 0, 150, 'under 3 min!', { size: 34, fill: GREEN });
+
+// critter
+const critter = el('g', {}, world);
+const cBody = el('g', {}, critter);
+const LEGS = [-96, -58, 58, 96].map((x) => { const g = el('g', {}, cBody); rrect(g, x - 14, -44, 28, 44, 6, CORAL, { sw: 4 }); return g; });
+rrect(cBody, -66, -226, 118, 58, 5, PAPER, { sw: 3.5, hatch: false });
+line(cBody, [[-52, -210], [30, -212]], { sw: 2.5, stroke: '#b9aea4' });
+rrect(cBody, -116, -216, 94, 36, 9, CORAL_DK, { sw: 4 });
+rrect(cBody, -124, -194, 248, 168, 16, CORAL, { sw: 5 });
+line(cBody, [[-110, -168], [110, -168]], { sw: 2.5, stroke: CORAL_DK, j: 1.5 });
+const face = el('g', {}, cBody);
+const eyes = el('g', {}, face);
+const eyeL = el('g', {}, eyes), eyeR = el('g', {}, eyes);
+ell(eyeL, -44, -112, 11, 16, INK, { single: true, sw: 1, hatch: false }); el('circle', { cx: -40, cy: -118, r: 4, fill: '#fff' }, eyeL);
+ell(eyeR, 44, -112, 11, 16, INK, { single: true, sw: 1, hatch: false }); el('circle', { cx: 48, cy: -118, r: 4, fill: '#fff' }, eyeR);
+const eyesHappy = el('g', {}, face);
+line(eyesHappy, [[-58, -106], [-44, -122], [-30, -106]], { sw: 6 }); line(eyesHappy, [[30, -106], [44, -122], [58, -106]], { sw: 6 });
+ell(face, -84, -80, 16, 9, '#F3A59A', { stroke: null, hatch: false }); ell(face, 84, -80, 16, 9, '#F3A59A', { stroke: null, hatch: false });
+const mSmile = line(face, [[-14, -84], [0, -76], [14, -84]], { sw: 5 });
+const mOpen = poly(face, [[-18, -88], [18, -88], [12, -70], [0, -64], [-12, -70]], INK, { sw: 3, hatch: false, j: 0.8 });
+const mO = ell(face, 0, -78, 9, 11, INK, { single: true, sw: 2, hatch: false });
+const armL = el('g', {}, critter), armR = el('g', {}, critter);
+const armLi = el('g', {}, armL), armRi = el('g', {}, armR);
+rrect(armLi, -38, -14, 42, 28, 9, CORAL, { sw: 4 });
+rrect(armRi, -4, -14, 42, 28, 9, CORAL, { sw: 4 });
+const held = el('g', {}, critter);
+function drawCard(parent) {
+  rrect(parent, -104, -62, 208, 124, 10, PAPER, { sw: 4.5, hatch: false });
+  text(parent, 0, -28, 'INDICATION', { cls: 'pen', size: 22, fill: '#6f665f', attrs: { 'letter-spacing': 3 } });
+  text(parent, 0, 22, '$1,511', { size: 58, fill: CORAL_DK });
+  text(parent, 0, 50, 'non-binding', { cls: 'pen', size: 20, fill: '#8a817a' });
+}
+const heldCard = el('g', { transform: 'translate(0 -282)' }, held); drawCard(heldCard);
+
+// papers
+const PAPER_LABELS = ['ACORD 125', 'Supplemental', 'Loss runs', 'SOV', 'ACORD 126', 'Class code?', 'Questionnaire', 'Loss runs', 'ACORD 140', 'Supplemental', 'Signed apps', 'Class code?', 'Loss runs', 'ACORD 125'];
+const PILE = [[885, 812], [962, 818], [1040, 810], [860, 742], [930, 736], [1000, 744], [1070, 738], [900, 668], [975, 662], [1045, 670], [940, 598], [1012, 604], [975, 540], [990, 488]];
+const PAPERS = [];
+{
+  const r = rng(21);
+  PAPER_LABELS.forEach((lab, i) => {
+    const g = el('g', {}, world);
+    rrect(g, -58, -72, 116, 144, 5, PAPER, { sw: 3.5, hatch: false });
+    text(g, 0, -40, lab, { cls: 'pen', size: lab.length > 10 ? 17 : 20, fill: CORAL_DK });
+    [-14, 6, 26, 46].forEach((y, k) => line(g, [[-40, y], [k === 3 ? 10 : 40, y + (r() - 0.5) * 3]], { sw: 2.5, stroke: '#b7ada4' }));
+    const [x1, y1] = PILE[i];
+    const ang = Math.atan2(y1 - 740, x1 - 960) + (r() - 0.5) * 0.8;
+    PAPERS.push({ g, t0: T.papers0 + i * 0.1, x0: x1 + (r() - 0.5) * 300, r0: (r() - 0.5) * 120, x1, y1, r1: (r() - 0.5) * 34,
+      vx: Math.cos(ang) * (900 + r() * 700), vy: -500 - r() * 700, spin: (r() - 0.5) * 900 });
+  });
+}
+// peeking eyes (drawn above the pile)
+const peek = el('g', {}, world);
+ell(peek, -30, 0, 10, 14, INK, { single: true, sw: 1, hatch: false }); ell(peek, 30, 0, 10, 14, INK, { single: true, sw: 1, hatch: false });
+el('circle', { cx: -26, cy: -5, r: 3.5, fill: '#fff' }, peek); el('circle', { cx: 34, cy: -5, r: 3.5, fill: '#fff' }, peek);
+const sweat = el('g', {}, peek); sketch(sweat, 'M70 -40 q14 22 0 30 q-14 -8 0 -30 Z', null, '#A9D4F2', { sw: 3 });
+
+// flying indication card, impact lines, sparkles
+const flyCard = el('g', {}, world); drawCard(flyCard);
+const impact = el('g', {}, world);
+for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 + 0.3; line(impact, [[Math.cos(a) * 150, Math.sin(a) * 110], [Math.cos(a) * 205, Math.sin(a) * 150]], { sw: 5 }); }
+const sparkles = el('g', {}, world);
+const SPARK = [[-200, -250], [190, -300], [210, 60], [-210, 120]].map(([x, y], i) => {
+  const g = el('g', {}, sparkles); poly(g, [[0, -22], [5, -5], [22, 0], [5, 5], [0, 22], [-5, 5], [-22, 0], [-5, -5]], i % 2 ? MUSTARD : CORAL, { sw: 2.5, j: 0.6 });
+  return { g, x, y };
+});
+
+// speech bubbles
+function bubble(parent, rx, ry, tail, lines, size) {
+  const g = el('g', {}, parent);
+  poly(g, [[-rx * 0.28, ry * 0.62], [tail[0], tail[1]], [rx * 0.02, ry * 0.8]], PAPER, { sw: 4.5, hatch: false, j: 1 });
+  ell(g, 0, 0, rx, ry, PAPER, { sw: 5, hatch: false });
+  el('path', { d: `M${-rx * 0.3} ${ry * 0.55} L${rx * 0.05} ${ry * 0.72}`, stroke: PAPER, 'stroke-width': 12 }, g);
+  lines.forEach((s, i) => text(g, 0, (i - (lines.length - 1) / 2) * size * 1.05 + size * 0.34, s, { size }));
+  return g;
+}
+const bub1 = bubble(world, 250, 90, [-60, 170], ['New cannabis', 'account!'], 50);
+const bub2 = bubble(world, 220, 70, [150, 130], ['Ugh… paperwork.'], 46);
+const bub3 = bubble(world, 190, 88, [170, 150], ['QUOTED!'], 78);
+
+// confetti
+const CONF = [];
+{
+  const r = rng(8), layer = el('g', {}, world), cols = [CORAL, GREEN, MUSTARD, SKY, CORAL];
+  for (let i = 0; i < 90; i++) {
+    const g = el('g', {}, layer), c = cols[i % cols.length], kind = i % 4;
+    if (kind === 0) poly(g, [[-8, -6], [8, -6], [8, 6], [-8, 6]], c, { sw: 2, single: true, j: 0.8, hatch: false });
+    else if (kind === 1) poly(g, [[0, -9], [8, 7], [-8, 7]], c, { sw: 2, single: true, j: 0.8, hatch: false });
+    else if (kind === 2) sketch(g, 'M0 4 C-10 -4 -6 -12 0 -6 C6 -12 10 -4 0 4 Z', null, c, { sw: 2, hatch: false });
+    else line(g, [[-9, 0], [-4, -5], [1, 0], [6, -5], [10, 0]], { sw: 3, stroke: c });
+    const burst = i < 34;
+    const ang = -Math.PI / 2 + (r() - 0.5) * 2.4;
+    CONF.push({ g, burst, x0: r() * W, y0: -40 - r() * 700, v: 90 + r() * 90, sway: 20 + r() * 30, ph: r() * 6.28, spin: (r() - 0.5) * 300,
+      vx: Math.cos(ang) * (500 + r() * 700), vy: Math.sin(ang) * (500 + r() * 700) });
+  }
+}
+
+// ---------- end card (outside the boil filter so the logo stays crisp) ----------
+const EX = 1330;
+const endLogo = el('g', {}, endLayer);
+text(endLogo, EX, 300, 'CARMA', { cls: '', size: 118, fill: '#343434', attrs: { style: 'font-family:Montserrat;font-weight:800;letter-spacing:-1px' } });
+text(endLogo, EX - 6, 344, 'insurance', { cls: '', size: 34, fill: '#343434', attrs: { style: "font-family:'Playfair Display';letter-spacing:14px" } });
+el('path', { d: `M${EX + 150} 314 l18 0 l-14 40 l-18 0 Z`, fill: '#EC5F59' }, endLogo);
+const endQQ = el('g', {}, endLayer); text(endQQ, EX, 480, 'QuickQuote', { size: 124, fill: CORAL_DK });
+const underline = el('path', { d: `M${EX - 250} 506 Q${EX} 520 ${EX + 262} 500`, fill: 'none', stroke: CORAL, 'stroke-width': 9, 'stroke-linecap': 'round', 'stroke-dasharray': 560, 'stroke-dashoffset': 560 }, endLayer);
+const endL1 = el('g', {}, endLayer); text(endL1, EX, 598, 'Cannabis account?', { size: 64 });
+const endL2 = el('g', {}, endLayer); text(endL2, EX, 670, 'Get an indication in 3 minutes or less.', { size: 44, fill: '#4a403a' });
+const endCta = el('g', {}, endLayer);
+{ const g = el('g', { filter: 'url(#boil)' }, endCta); rrect(g, EX - 360, 736, 720, 92, 46, '#EC5F59', { sw: 5 }); }
+text(endCta, EX, 797, 'Request access  →  carma365.com', { size: 42, fill: '#fff' });
+const endFine = el('g', {}, endLayer); text(endFine, 960, 1046, 'Non-binding indications for eligible cannabis accounts.', { cls: 'pen', size: 28, fill: '#6f665f' });
+
+// ================= per-frame =================
+function critterX(t) {
+  if (t < T.walkIn[0]) return -250;
+  if (t < T.walkIn[1]) return lerp(-250, CR_X.home, (P(t, ...T.walkIn) * 0.85 + outCubic(P(t, ...T.walkIn)) * 0.15));
+  if (t < T.walk2[0]) return CR_X.home;
+  if (t < T.walk2[1]) return lerp(CR_X.home, CR_X.phone, inOut(P(t, ...T.walk2)));
+  if (t < T.walk3[0]) return CR_X.phone;
+  if (t < T.walk3[1]) return lerp(CR_X.phone, CR_X.end, inOut(P(t, ...T.walk3)));
+  return CR_X.end;
+}
+const HOPS = [[T.excite, 70, 0.42], [T.excite + 0.45, 45, 0.36], [T.burst, 170, 0.62], ...T.celebrate.map((c, i) => [c, [150, 110, 80][i], 0.52]), [18.9, 45, 0.4], [19.6, 45, 0.4]];
+const TAP_ALL = [...T.taps.map((c, i) => [c, JUMP_FOR(ROW_Y[i])]), [T.button, 0]];
+function jumpAt(t) {
+  let y = 0, sq = 1;
+  HOPS.forEach(([c, h, d]) => { if (t >= c && t <= c + d) { const u = (t - c) / d; y += h * 4 * u * (1 - u); sq += (u < 0.5 ? 0.06 : -0.02); } sq -= bump(t, c + d, 0.18, 0.12); if (t >= c - 0.12 && t < c) sq -= bump(t, c - 0.12, 0.12, 0.1); });
+  TAP_ALL.forEach(([c, J]) => {
+    if (J <= 0) return;
+    if (t >= c - 0.36 && t < c) y += J * outCubic(P(t, c - 0.36, c));
+    else if (t >= c && t < c + 0.4) y += J * (1 - inCubic(P(t, c + 0.06, c + 0.4)));
+    sq -= bump(t, c + 0.4, 0.16, 0.1);
+  });
+  return [y, sq];
+}
+const CAM = [[0, 960, 560, 1.35], [7.0, 960, 560, 1.35], [7.9, 1300, 560, 1.35], [15.5, 1300, 560, 1.35], [16.6, 960, 540, 1]];
+function camAt(t) {
+  if (t <= CAM[0][0]) return CAM[0].slice(1);
+  for (let i = 0; i < CAM.length - 1; i++) {
+    const a = CAM[i], b = CAM[i + 1];
+    if (t <= b[0]) { const k = inOut(P(t, a[0], b[0])); return [lerp(a[1], b[1], k), lerp(a[2], b[2], k), lerp(a[3], b[3], k)]; }
+  }
+  return CAM[CAM.length - 1].slice(1);
+}
+function setTime(t) {
+  const [camX, camY, camZ] = camAt(t);
+  setT(world, `translate(960 540) scale(${camZ.toFixed(4)}) translate(${f1(-camX)} ${f1(-camY)})`);
+  document.getElementById('turb').setAttribute('seed', String(1 + (Math.floor(t * 8) % 6)));
+
+  // bunting drop + sway
+  setT(bunting, `translate(0 ${f1((1 - outBack(P(t, 0, 0.8), 1.4)) * -220)})`);
+  FLAGS.forEach((f) => setT(f.inner, `rotate(${f1(Math.sin(t * 2.2 + f.ph) * 4)})`));
+  // fade the greenhouse behind the end text
+  setO(greenhouse, 1 - 0.75 * P(t, 15.9, 16.6));
+
+  // ---- critter
+  const x = critterX(t), xn = critterX(t + 0.02), speed = Math.abs(xn - x) / 0.02;
+  const [jy, sq] = jumpAt(t);
+  const y = GROUND - jy;
+  const walking = speed > 20 && jy < 1;
+  const ph = x * 0.075;
+  LEGS.forEach((g, i) => {
+    const amp = walking ? clamp(speed / 500) * 14 : 0;
+    const air = jy > 4 ? 10 : 0;
+    setT(g, `translate(0 ${f1(-Math.max(0, Math.sin(ph + (i % 2) * Math.PI)) * amp + (i < 2 ? air * 0.3 : air * 0.3))}) rotate(${f1(jy > 4 ? (i < 2 ? -8 : 8) : 0)} ${[-96, -58, 58, 96][i]} -44)`);
+  });
+  const bob = walking ? Math.abs(Math.sin(ph)) * 5 : Math.sin(t * 3) * 1.5;
+  const buried = t > T.papers0 + 0.5 && t < T.burst;
+  PAPERS.forEach((p) => { /* squash as each sheet lands */ });
+  let sqp = sq; PAPERS.forEach((p) => { if (t < T.burst) sqp -= bump(t, p.t0 + 0.42, 0.16, 0.035); });
+  const sy = sqp * (buried ? 0.92 : 1), sx = 1 / Math.sqrt(sy);
+  setT(critter, `translate(${f1(x)} ${f1(y - bob)})`);
+  setT(cBody, `scale(${sx.toFixed(3)} ${sy.toFixed(3)})`);
+  const dir = t > T.walk3[0] - 0.1 && t < T.walk3[1] + 0.1 ? -1 : (xn >= x ? 1 : 1);
+  // face
+  const excited = t > T.excite - 0.05 && t < T.bubble1[1];
+  const celebrating = t > T.catch;
+  const happy = excited || celebrating;
+  const blinkM = (t + 0.4) % 2.6, blink = blinkM < 0.13 ? 1 - Math.sin(Math.PI * blinkM / 0.13) * 0.9 : 1;
+  const lookX = (t > T.walk2[1] && t < T.catch) ? 6 : dir * 4 * (walking ? 1 : 0.4);
+  setT(eyes, `translate(${f1(lookX)} 0)`);
+  setT(eyeL, `translate(0 ${f1(-112 * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
+  setT(eyeR, `translate(0 ${f1(-112 * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
+  setO(eyes, happy ? 0 : 1); setO(eyesHappy, happy ? 1 : 0);
+  const tapping = TAP_ALL.some(([c]) => t > c - 0.36 && t < c + 0.3);
+  setO(mOpen, happy ? 1 : 0); setO(mO, !happy && tapping ? 1 : 0); setO(mSmile, !happy && !tapping ? 1 : 0);
+  // arms
+  let aL = Math.sin(t * 3) * 6, aR = -Math.sin(t * 3) * 6, sL = 1, sR = 1;
+  if (walking) { aL = Math.sin(ph) * 18; aR = Math.sin(ph) * 18; }
+  if (excited) { aL = 60 + Math.sin(t * 20) * 15; aR = -60 - Math.sin(t * 20) * 15; }
+  TAP_ALL.forEach(([c], i) => {
+    const k = Math.max(bump(t, c - 0.12, 0.34, 1), 0);
+    if (k > 0) {
+      const tx = i < 4 ? PHONE.x - 101 : PHONE.x - 70;
+      const need = (tx - (x + 122)) / 38;
+      sR = lerp(1, Math.max(1.2, need), k); aR = 0;
+    }
+  });
+  if (t > T.catch - 0.12) {
+    const k = outBack(P(t, T.catch - 0.12, T.catch + 0.1), 1.5);
+    aL = lerp(aL, 112, k); aR = lerp(aR, -112, k); sL = lerp(1, 2.5, k); sR = lerp(sR, 2.5, k);
+  }
+  setT(armL, `translate(-122 ${f1(-120 * sy)})`); setT(armLi, `rotate(${f1(aL)}) scale(${sL.toFixed(3)} 1)`);
+  setT(armR, `translate(122 ${f1(-120 * sy)})`); setT(armRi, `rotate(${f1(aR)}) scale(${sR.toFixed(3)} 1)`);
+  // held card
+  setO(held, t >= T.catch ? 1 : 0);
+  setT(held, `translate(0 ${f1((1 - sy) * 150)}) rotate(${f1(Math.sin(t * 4) * 3)})`);
+
+  // ---- papers
+  PAPERS.forEach((p) => {
+    if (t < p.t0) { setO(p.g, 0); return; }
+    let px, py, pr;
+    if (t < T.burst) {
+      const f = P(t, p.t0, p.t0 + 0.42);
+      px = lerp(p.x0, p.x1, outCubic(f)); py = lerp(-180, p.y1, inCubic(f)); pr = lerp(p.r0, p.r1, outCubic(f));
+      if (f >= 1) py -= bump(t, p.t0 + 0.42, 0.2, 10);
+      if (t > 5.3) pr += Math.sin(t * 13 + p.x1) * 2;
+    } else {
+      const d = t - T.burst;
+      px = p.x1 + p.vx * d; py = p.y1 + p.vy * d + 1200 * d * d; pr = p.r1 + p.spin * d;
+    }
+    setO(p.g, py < 1300 ? 1 : 0);
+    setT(p.g, `translate(${f1(px)} ${f1(py)}) rotate(${f1(pr)})`);
+  });
+  const pk = t > 5.1 && t < T.burst ? 1 : 0;
+  setO(peek, pk);
+  setT(peek, `translate(${f1(960 + Math.sin(t * 2.4) * 10)} 758)`);
+  setT(sweat, `translate(0 ${f1((t * 40) % 14)})`);
+
+  // ---- phone
+  let phx = PHONE.x, phr = 0;
+  if (t < T.phoneOut[0]) { const k = P(t, ...T.phoneIn); phx = lerp(2250, PHONE.x, outBack(k, 1.3)); phr = (1 - outCubic(k)) * 12; }
+  else { const k = inCubic(P(t, ...T.phoneOut)); phx = lerp(PHONE.x, 2300, k); phr = k * 10; }
+  const shake = t > T.eject - 0.1 && t < T.eject + 0.25 ? Math.sin(t * 90) * 5 : 0;
+  setO(phone, t > T.phoneIn[0] && t < T.phoneOut[1] ? 1 : 0);
+  setT(phone, `translate(${f1(phx + shake)} ${PHONE.y}) rotate(${f1(phr)}) scale(${(1 + bump(t, T.button, 0.25, 0.02)).toFixed(3)})`);
+  ROWS.forEach((r, i) => {
+    const c = T.taps[i];
+    setO(r.hi, P(t, c - 0.02, c + 0.12));
+    r.ck.setAttribute('stroke-dashoffset', f1(60 * (1 - outCubic(P(t, c + 0.02, c + 0.28)))));
+  });
+  const bp = t >= T.button && t < T.button + 0.18;
+  setT(btn, `translate(0 ${bp ? 5 : 0}) scale(${bp ? 0.97 : 1})`);
+  SPARK.forEach((s, i) => {
+    const k = bump(t, 6.3 + i * 0.07, 0.6, 1);
+    setO(s.g, k); setT(s.g, `translate(${f1(PHONE.x + s.x)} ${f1(PHONE.y + s.y)}) scale(${(0.4 + k).toFixed(3)}) rotate(${f1(t * 90)})`);
+  });
+
+  // ---- stopwatch
+  const wIn = outBack(P(t, 7.9, 8.3), 2), wOut = 1 - inCubic(P(t, 13.0, 13.25));
+  const wk = Math.min(wIn, wOut);
+  setO(watch, t > 7.9 && t < 13.25 ? 1 : 0);
+  const secs = clamp((t - 8.0) / (12.6 - 8.0)) * 167;
+  setT(watch, `translate(820 ${f1(400 + Math.sin(t * 2) * 6)}) scale(${(wk * (1 + bump(t, 12.6, 0.3, 0.15))).toFixed(3)}) rotate(${f1(Math.sin(t * 1.7) * 3)})`);
+  setT(watchHand, `rotate(${f1(secs * 6)})`);
+  watchText.textContent = `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
+  watchText.setAttribute('fill', t >= 12.6 ? GREEN : INK);
+  setO(watchSub, P(t, 12.6, 12.9));
+
+  // ---- flying card
+  if (t >= T.eject && t < T.catch) {
+    let cx, cy, cr, cs;
+    if (t < T.eject + 0.35) { const k = outCubic(P(t, T.eject, T.eject + 0.35)); cx = PHONE.x; cy = lerp(PHONE.y - 250, PHONE.y - 330, k); cr = 0; cs = lerp(0.4, 1, k); }
+    else { const k = inOut(P(t, T.eject + 0.35, T.catch)); cx = lerp(PHONE.x, CR_X.phone, k); cy = lerp(PHONE.y - 330, GROUND - 282, k) - Math.sin(Math.PI * k) * 120; cr = k * 360; cs = 1; }
+    setO(flyCard, 1); setT(flyCard, `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(cr)}) scale(${cs.toFixed(3)})`);
+  } else setO(flyCard, 0);
+  const im = t > T.catch && t < T.catch + 0.9 ? 1 - P(t, T.catch + 0.5, T.catch + 0.9) : 0;
+  setO(impact, im);
+  setT(impact, `translate(${f1(x)} ${f1(y - bob - 282)}) scale(${(0.8 + 0.25 * Math.abs(Math.sin(t * 14))).toFixed(3)})`);
+
+  // ---- bubbles
+  const pop = (a, b) => (t < a || t > b ? 0 : Math.min(outBack(P(t, a, a + 0.35), 2.2), 1 - inCubic(P(t, b - 0.22, b))));
+  const b1 = pop(...T.bubble1); setO(bub1, b1 > 0 ? 1 : 0); setT(bub1, `translate(1020 470) scale(${Math.max(0.001, b1).toFixed(3)})`);
+  const b2 = pop(...T.bubble2); setO(bub2, b2 > 0 ? 1 : 0); setT(bub2, `translate(700 440) scale(${Math.max(0.001, b2).toFixed(3)}) rotate(${f1(Math.sin(t * 8) * 1.5)})`);
+  const b3 = pop(13.15, 15.3); setO(bub3, b3 > 0 ? 1 : 0); setT(bub3, `translate(930 360) scale(${Math.max(0.001, b3).toFixed(3)}) rotate(${f1(-4 + Math.sin(t * 6) * 2)})`);
+
+  // ---- confetti
+  CONF.forEach((c) => {
+    const d = t - 13.1;
+    if (d < 0) { setO(c.g, 0); return; }
+    let cx, cy;
+    if (c.burst) { cx = CR_X.phone + c.vx * d * Math.exp(-d * 1.2); cy = GROUND - 282 + c.vy * d * Math.exp(-d * 1.2) + 300 * d * d; }
+    else { cx = c.x0 + Math.sin(d * 2 + c.ph) * c.sway; cy = c.y0 + c.v * d * 1.6; }
+    setO(c.g, cy < GROUND + 10 ? (c.burst ? 1 - P(d, 2.2, 3) : 1) : 0);
+    setT(c.g, `translate(${f1(cx)} ${f1(cy)}) rotate(${f1(c.spin * d)}) scale(${(0.7 + 0.3 * Math.cos(d * 5 + c.ph)).toFixed(3)} 1)`);
+  });
+
+  // ---- end card
+  const e = (a, s = 2) => outBack(P(t, a, a + 0.45), s);
+  const at = (node, a, dy = 0, s = 2) => { const k = e(a, s); setO(node, clamp(k * 2)); setT(node, `translate(0 ${f1((1 - k) * 30 + dy)})`); };
+  at(endLogo, T.end); at(endQQ, T.end + 0.3);
+  underline.setAttribute('stroke-dashoffset', f1(560 * (1 - outCubic(P(t, T.end + 0.6, T.end + 1.0)))));
+  at(endL1, T.end + 0.7, 0, 1.4); at(endL2, T.end + 0.9, 0, 1.4);
+  const ck = e(T.end + 1.3, 2.2); setO(endCta, clamp(ck * 2));
+  const pulse = t > T.end + 2 ? 1 + Math.sin((t - T.end - 2) * 5) * 0.015 : 1;
+  setT(endCta, `translate(${EX} 782) scale(${(Math.max(0.001, ck) * pulse).toFixed(3)}) translate(${-EX} -782)`);
+  setO(endFine, P(t, T.end + 1.6, T.end + 2.0));
+}
+window.setTime = setTime;
+window.DURATION = DURATION;
+window.STAGE = [W, H];
+window.SFX = [
+  ...Array.from({ length: 14 }, (_, i) => ({ t: 0.3 + i * 0.145, k: 'step' })),
+  { t: T.excite, k: 'boing' }, { t: T.bubble1[0], k: 'pop' },
+  ...PAPERS.map((p) => ({ t: p.t0 + 0.42, k: 'paper' })),
+  { t: T.bubble2[0], k: 'pop2' }, { t: T.phoneIn[0], k: 'whoosh' }, { t: 6.35, k: 'ding' }, { t: 6.4, k: 'sparkle' },
+  { t: T.burst, k: 'boing' }, { t: T.burst + 0.02, k: 'whoosh' },
+  ...Array.from({ length: 5 }, (_, i) => ({ t: 7.25 + i * 0.13, k: 'step' })),
+  { t: 7.95, k: 'pop2' },
+  ...T.taps.map((c) => ({ t: c - 0.3, k: 'hop' })),
+  ...[...T.taps, T.button].map((c) => ({ t: c, k: 'click' })),
+  ...T.taps.map((c) => ({ t: c + 0.05, k: 'scribble' })),
+  ...T.taps.map((c) => ({ t: c + 0.12, k: 'ding' })),
+  { t: 12.6, k: 'ding' }, { t: T.eject, k: 'whoosh' },
+  { t: T.catch, k: 'chime' }, { t: T.catch + 0.05, k: 'confetti' }, { t: 13.15, k: 'pop' },
+  ...T.celebrate.map((c) => ({ t: c, k: 'boing' })),
+  { t: T.phoneOut[0], k: 'whoosh' },
+  ...Array.from({ length: 10 }, (_, i) => ({ t: 15.7 + i * 0.13, k: 'step' })),
+  { t: T.end, k: 'pop' }, { t: T.end + 0.3, k: 'pop2' }, { t: T.end + 0.6, k: 'scribble' },
+  { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
+];
+
+// ---------- live playback ----------
+const params = new URLSearchParams(location.search);
+function fit() { document.getElementById('stage').style.transform = `scale(${Math.min(innerWidth / W, innerHeight / H)})`; }
+if (!params.has('render')) {
+  document.body.classList.add('live');
+  fit(); addEventListener('resize', fit);
+  let start = null;
+  document.fonts.ready.then(() => {
+    const loop = (now) => { if (start === null) start = now; setTime(((now - start) / 1000) % DURATION); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+  document.getElementById('replay').onclick = () => { start = null; };
+} else setTime(0);
+</script>
+</body>
+</html>
