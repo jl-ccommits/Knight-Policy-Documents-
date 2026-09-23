@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CARMA QuickQuote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=block" rel="stylesheet">
+<style>
+  :root {
+    --ink: #16352B;
+    --green: #2FA36B;
+    --green-dk: #1F7A55;
+    --mint: #CDEFD9;
+    --mint-lt: #E6F7EC;
+    --cream: #FFF7E8;
+    --sun: #FFC94D;
+    --coral: #FF7A6B;
+    --pink: #FFB3B3;
+    --gray: #7B8A84;
+    --line: #E4E9E6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #10261F; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; font-family: Nunito, sans-serif; color: var(--ink); }
+  #stage {
+    position: relative; width: 1080px; height: 1080px; overflow: hidden;
+    background: var(--cream); transform-origin: center center; flex: none;
+  }
+  .abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  .blob { border-radius: 50%; background: var(--mint-lt); }
+  .headline {
+    font-family: Fredoka, sans-serif; font-weight: 600; font-size: 66px; line-height: 1.1;
+    color: var(--ink); text-align: center; width: 1000px; white-space: nowrap;
+  }
+  .headline em { font-style: normal; color: var(--green); }
+  .paper {
+    width: 76px; height: 96px; background: #fff; border: 4px solid var(--ink); border-radius: 8px;
+    padding: 14px 10px; display: flex; flex-direction: column; gap: 9px;
+  }
+  .paper i { display: block; height: 5px; border-radius: 3px; background: #C9D3CE; }
+  .paper i:nth-child(1) { width: 70%; background: var(--coral); }
+  .paper i:nth-child(4) { width: 55%; }
+
+  /* Quote card */
+  #card {
+    width: 640px; height: 780px; background: #fff; border-radius: 40px;
+    border: 5px solid var(--ink); box-shadow: 0 16px 0 var(--ink); overflow: hidden;
+  }
+  #card .hdr { position: absolute; left: 36px; top: 30px; right: 36px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 38px; letter-spacing: 1px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .wordmark .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .pill { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 24px; background: var(--mint); color: var(--green-dk); padding: 8px 18px; border-radius: 999px; }
+  #progress { position: absolute; left: 36px; top: 112px; width: 568px; height: 12px; display: flex; gap: 12px; }
+  #progress .seg { flex: 1; background: var(--line); border-radius: 6px; overflow: hidden; }
+  #progress .seg b { display: block; height: 100%; width: 0; background: var(--green); border-radius: 6px; }
+  #stepLabel { position: absolute; left: 36px; top: 138px; font-weight: 800; font-size: 20px; color: var(--gray); letter-spacing: .5px; text-transform: uppercase; }
+  #screens { position: absolute; left: 36px; top: 190px; width: 568px; height: 500px; overflow: hidden; }
+  .screen { position: absolute; left: 0; top: 0; width: 568px; height: 500px; }
+  .q { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 40px; line-height: 1.1; color: var(--ink); }
+  .tile {
+    position: absolute; width: 274px; height: 150px; border: 4px solid var(--line); border-radius: 26px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff;
+  }
+  .tile .emo { font-size: 50px; line-height: 1; }
+  .tile .lbl { font-weight: 800; font-size: 25px; }
+  .tile .chk, .chip .chk {
+    position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: var(--green);
+    color: #fff; font-weight: 900; font-size: 21px; display: flex; align-items: center; justify-content: center;
+  }
+  .field {
+    position: absolute; left: 0; top: 120px; width: 568px; height: 92px; border: 4px solid var(--line); border-radius: 24px;
+    display: flex; align-items: center; padding: 0 24px; gap: 14px; font-weight: 800; font-size: 32px; background: #fff;
+  }
+  .field .ph { color: #B7C2BD; }
+  .caret { display: inline-block; width: 3px; height: 38px; background: var(--ink); margin-left: 2px; vertical-align: middle; }
+  .dropdown { position: absolute; left: 0; top: 226px; width: 568px; border: 4px solid var(--line); border-radius: 24px; background: #fff; overflow: hidden; }
+  .dropdown .row { height: 72px; display: flex; align-items: center; padding: 0 24px; font-weight: 800; font-size: 28px; gap: 12px; }
+  .dropdown .row small { font-size: 20px; color: var(--gray); font-weight: 700; margin-left: auto; }
+  .bigval { position: absolute; left: 0; top: 130px; width: 568px; text-align: center; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 88px; color: var(--green-dk); }
+  .per { position: absolute; left: 0; top: 240px; width: 568px; text-align: center; font-weight: 800; font-size: 22px; color: var(--gray); }
+  .track { position: absolute; left: 20px; top: 318px; width: 528px; height: 16px; border-radius: 8px; background: var(--line); }
+  .track b { display: block; height: 100%; border-radius: 8px; background: var(--green); }
+  .knob { width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 6px solid var(--green); box-shadow: 0 4px 0 var(--green-dk); }
+  .ends { position: absolute; top: 356px; font-weight: 800; font-size: 20px; color: var(--gray); }
+  .chip {
+    position: absolute; height: 70px; border: 4px solid var(--line); border-radius: 999px; background: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; gap: 8px; white-space: nowrap;
+  }
+  .chip .chk { position: static; width: 28px; height: 28px; font-size: 17px; }
+  .chip .plus { color: var(--gray); font-weight: 900; font-size: 26px; width: 28px; text-align: center; }
+  .btn {
+    position: absolute; left: 0; top: 410px; width: 568px; height: 84px; border-radius: 26px; background: var(--green);
+    color: #fff; font-family: Fredoka, sans-serif; font-weight: 600; font-size: 34px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 7px 0 var(--green-dk);
+  }
+  .foot { position: absolute; left: 0; right: 0; top: 712px; text-align: center; font-weight: 700; font-size: 19px; color: var(--gray); }
+  .dotsrow { position: absolute; left: 0; top: 380px; width: 568px; display: flex; justify-content: center; gap: 18px; }
+  .dotsrow i { width: 22px; height: 22px; border-radius: 50%; background: var(--green); display: block; }
+  .resrow { position: absolute; left: 60px; width: 448px; height: 52px; display: flex; align-items: center; gap: 14px; font-weight: 800; font-size: 27px; }
+  .resrow .chk { width: 36px; height: 36px; border-radius: 50%; background: var(--mint); color: var(--green-dk); font-weight: 900; font-size: 22px; display: flex; align-items: center; justify-content: center; flex: none; }
+
+  .cursor { width: 52px; height: 60px; }
+  .ripple { width: 90px; height: 90px; border-radius: 50%; border: 6px solid var(--green); }
+  .confetti { width: 16px; height: 10px; border-radius: 3px; }
+
+  /* End card */
+  .endword { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 132px; letter-spacing: 4px; color: var(--ink); width: 1000px; text-align: center; line-height: 1; }
+  .endpill { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 50px; color: #fff; background: var(--green); padding: 10px 38px 14px; border-radius: 999px; box-shadow: 0 7px 0 var(--green-dk); white-space: nowrap; }
+  .tagline { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 42px; color: var(--ink); text-align: center; width: 1000px; line-height: 1.2; }
+  .url { font-weight: 900; font-size: 34px; color: var(--ink); background: #fff; border: 4px solid var(--ink); padding: 10px 30px; border-radius: 999px; white-space: nowrap; }
+  .fine { font-weight: 700; font-size: 19px; color: var(--gray); width: 1000px; text-align: center; }
+  .heart { font-size: 40px; line-height: 1; }
+
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 700 15px Nunito, sans-serif; background: #fff; color: var(--ink); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  body.live #replay { display: block; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- background -->
+  <div class="abs blob" id="blob0" style="width:520px;height:520px"></div>
+  <div class="abs blob" id="blob1" style="width:380px;height:380px"></div>
+  <div class="abs blob" id="blob2" style="width:300px;height:300px"></div>
+  <div id="sparkles"></div>
+
+  <!-- scene 1 headlines -->
+  <div class="abs headline" id="h1">Running a cannabis business?</div>
+  <div class="abs headline" id="h2">Insurance paperwork piling up?</div>
+  <div class="abs headline" id="h3">Meet <em>QuickQuote</em> ✨</div>
+
+  <!-- storefront character -->
+  <svg class="abs" id="store" width="420" height="380" viewBox="0 0 420 380" overflow="visible">
+    <g stroke="#16352B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="30" y="112" width="360" height="258" rx="20" fill="#fff"/>
+      <!-- sign -->
+      <rect x="110" y="8" width="200" height="62" rx="16" fill="#16352B"/>
+      <!-- awning -->
+      <path d="M22 72 H398 L398 130 Q375 156 351 130 Q327 156 304 130 Q280 156 257 130 Q233 156 210 130 Q186 156 163 130 Q139 156 116 130 Q92 156 69 130 Q45 156 22 130 Z" fill="#2FA36B"/>
+      <path d="M69 72 V130 M163 72 V130 M257 72 V130 M351 72 V130" stroke-width="0"/>
+      <!-- window & door -->
+      <rect x="60" y="272" width="170" height="80" rx="12" fill="#E6F7EC"/>
+      <rect x="262" y="262" width="100" height="108" rx="12" fill="#FFC94D"/>
+      <circle cx="342" cy="318" r="6" fill="#16352B" stroke-width="0"/>
+    </g>
+    <!-- awning stripes -->
+    <g fill="#fff" opacity=".9">
+      <path d="M116 76 H163 V128 Q151 146 139.5 136 Q128 146 116 128 Z"/>
+      <path d="M210 76 H257 V128 Q245 146 233.5 136 Q222 146 210 128 Z"/>
+      <path d="M304 76 H351 V128 Q339 146 327.5 136 Q316 146 304 128 Z"/>
+      <path d="M26 76 H69 V128 Q57 146 45.5 136 Q34 146 26 128 Z"/>
+    </g>
+    <!-- sign leaf -->
+    <g transform="translate(210 39)">
+      <path d="M0 16 V-6" stroke="#CDEFD9" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="-9" cy="-6" rx="10" ry="5" fill="#2FA36B" transform="rotate(-35 -9 -6)"/>
+      <ellipse cx="9" cy="-6" rx="10" ry="5" fill="#2FA36B" transform="rotate(35 9 -6)"/>
+      <ellipse cx="0" cy="-12" rx="5" ry="11" fill="#5FD49A"/>
+    </g>
+    <!-- plants in window -->
+    <g stroke="#16352B" stroke-width="5" stroke-linejoin="round">
+      <path d="M90 352 l6 -26 h26 l6 26 Z" fill="#FF7A6B"/>
+      <path d="M160 352 l6 -26 h26 l6 26 Z" fill="#FFC94D"/>
+    </g>
+    <g fill="#2FA36B">
+      <ellipse cx="102" cy="316" rx="8" ry="14" transform="rotate(-25 102 316)"/>
+      <ellipse cx="116" cy="316" rx="8" ry="14" transform="rotate(25 116 316)"/>
+      <ellipse cx="172" cy="316" rx="8" ry="14" transform="rotate(-25 172 316)"/>
+      <ellipse cx="186" cy="316" rx="8" ry="14" transform="rotate(25 186 316)"/>
+    </g>
+    <!-- face -->
+    <g id="sBrows" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none">
+      <path d="M140 168 L168 178"/><path d="M280 168 L252 178"/>
+    </g>
+    <g id="sEyesOpen" fill="#16352B">
+      <g id="sEyeL"><ellipse cx="160" cy="204" rx="11" ry="15"/><circle cx="164" cy="198" r="4" fill="#fff"/></g>
+      <g id="sEyeR"><ellipse cx="260" cy="204" rx="11" ry="15"/><circle cx="264" cy="198" r="4" fill="#fff"/></g>
+    </g>
+    <g id="sEyesHappy" stroke="#16352B" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M146 208 Q160 188 174 208"/><path d="M246 208 Q260 188 274 208"/>
+    </g>
+    <g id="sBlush" fill="#FFB3B3"><ellipse cx="128" cy="232" rx="18" ry="10"/><ellipse cx="292" cy="232" rx="18" ry="10"/></g>
+    <path id="sMouthSmile" d="M192 232 Q210 248 228 232" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path id="sMouthBig" d="M186 228 Q210 266 234 228 Z" fill="#16352B" stroke="#16352B" stroke-width="5" stroke-linejoin="round"/>
+    <path id="sMouthWorry" d="M188 242 q7 -9 14 0 t14 0 t14 0" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path id="sSweat" d="M318 150 q14 22 0 30 q-14 -8 0 -30 Z" fill="#8FD3FF" stroke="#16352B" stroke-width="4"/>
+  </svg>
+
+  <!-- falling paperwork -->
+  <div id="papers"></div>
+
+  <!-- mascot (behind card) -->
+  <svg class="abs" id="mascot" width="160" height="190" viewBox="0 0 160 190" overflow="visible">
+    <g id="mBody">
+      <path d="M80 30 V8" stroke="#16352B" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="66" cy="12" rx="15" ry="7" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(-30 66 12)"/>
+      <ellipse cx="94" cy="12" rx="15" ry="7" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(30 94 12)"/>
+      <path d="M80 30 C108 42 132 44 148 46 L148 100 C148 145 118 170 80 184 C42 170 12 145 12 100 L12 46 C28 44 52 42 80 30 Z" fill="#2FA36B" stroke="#16352B" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M80 48 C100 56 118 58 130 60 L130 100 C130 132 110 150 80 162 C50 150 30 132 30 100 L30 60 C42 58 60 56 80 48 Z" fill="#5FD49A" opacity=".45"/>
+      <g id="mEyesOpen" fill="#16352B">
+        <g id="mEyeL"><ellipse cx="58" cy="98" rx="9" ry="13"/><circle cx="61" cy="93" r="3.5" fill="#fff"/></g>
+        <g id="mEyeR"><ellipse cx="102" cy="98" rx="9" ry="13"/><circle cx="105" cy="93" r="3.5" fill="#fff"/></g>
+      </g>
+      <g id="mEyesHappy" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none">
+        <path d="M47 102 Q58 86 69 102"/><path d="M91 102 Q102 86 113 102"/>
+      </g>
+      <g fill="#FFB3B3" opacity=".9"><ellipse cx="40" cy="120" rx="11" ry="7"/><ellipse cx="120" cy="120" rx="11" ry="7"/></g>
+      <path id="mMouth" d="M70 120 Q80 130 90 120" stroke="#16352B" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path id="mMouthOpen" d="M68 118 Q80 142 92 118 Z" fill="#16352B" stroke="#16352B" stroke-width="4" stroke-linejoin="round"/>
+    </g>
+  </svg>
+
+  <!-- quote card -->
+  <div class="abs" id="card">
+    <div class="hdr"><div class="wordmark"><span class="dot"></span>CARMA</div><div class="pill">QuickQuote ⚡</div></div>
+    <div id="progress"><div class="seg"><b></b></div><div class="seg"><b></b></div><div class="seg"><b></b></div><div class="seg"><b></b></div></div>
+    <div id="stepLabel">Step 1 of 4</div>
+    <div id="screens">
+      <!-- 1: business type -->
+      <div class="screen" id="scr0">
+        <div class="q">What kind of cannabis<br>business do you run?</div>
+        <div class="tile" id="tile0" style="left:0;top:120px"><div class="emo">🛍️</div><div class="lbl">Dispensary</div><div class="chk">✓</div></div>
+        <div class="tile" style="left:294px;top:120px"><div class="emo">🌱</div><div class="lbl">Cultivator</div></div>
+        <div class="tile" style="left:0;top:290px"><div class="emo">🧪</div><div class="lbl">Processor</div></div>
+        <div class="tile" style="left:294px;top:290px"><div class="emo">🚚</div><div class="lbl">Delivery</div></div>
+      </div>
+      <!-- 2: state -->
+      <div class="screen" id="scr1">
+        <div class="q">Where are you<br>located?</div>
+        <div class="field" id="field"><span style="font-size:34px">📍</span><span id="typed"></span><span class="caret" id="caret"></span><span class="ph" id="ph">Start typing a state…</span><span style="margin-left:auto" id="fieldChk"><span class="chk" style="position:static;width:38px;height:38px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900">✓</span></span></div>
+        <div class="dropdown" id="dropdown">
+          <div class="row" id="ddRow">🏔️ Colorado <small>CO</small></div>
+          <div class="row" style="color:#B7C2BD">Connecticut <small>CT</small></div>
+        </div>
+      </div>
+      <!-- 3: revenue -->
+      <div class="screen" id="scr2">
+        <div class="q">About how much do you<br>sell in a year?</div>
+        <div class="bigval" id="bigval">$0.4M</div>
+        <div class="per">in annual sales</div>
+        <div class="track"><b id="trackFill"></b></div>
+        <div class="abs knob" id="knob"></div>
+        <div class="ends" style="left:20px">$0</div>
+        <div class="ends" style="right:20px">$5M+</div>
+      </div>
+      <!-- 4: coverages -->
+      <div class="screen" id="scr3">
+        <div class="q">What should we<br>cover?</div>
+        <div class="chip" data-i="0" style="left:0;top:120px;width:290px">General Liability</div>
+        <div class="chip" data-i="1" style="left:306px;top:120px;width:262px">Product Liability</div>
+        <div class="chip" data-i="2" style="left:0;top:206px;width:196px">Property</div>
+        <div class="chip" data-i="3" style="left:212px;top:206px;width:356px">Crime &amp; Theft</div>
+        <div class="chip" data-i="4" style="left:0;top:292px;width:170px">Cyber</div>
+        <div class="chip" data-i="5" style="left:186px;top:292px;width:236px">Workers' Comp</div>
+        <div class="btn" id="goBtn">Get my quote →</div>
+      </div>
+      <!-- 5: loading -->
+      <div class="screen" id="scr4">
+        <svg class="abs" id="spinner" width="200" height="200" viewBox="0 0 200 200" style="left:184px;top:90px">
+          <circle cx="100" cy="100" r="78" fill="none" stroke="#E4E9E6" stroke-width="16"/>
+          <circle id="spinArc" cx="100" cy="100" r="78" fill="none" stroke="#2FA36B" stroke-width="16" stroke-linecap="round" stroke-dasharray="140 400"/>
+          <g transform="translate(100 104)">
+            <ellipse cx="-14" cy="-4" rx="18" ry="9" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(-35 -14 -4)"/>
+            <ellipse cx="14" cy="-4" rx="18" ry="9" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(35 14 -4)"/>
+            <ellipse cx="0" cy="-12" rx="9" ry="20" fill="#2FA36B" stroke="#16352B" stroke-width="4"/>
+          </g>
+        </svg>
+        <div class="q" style="position:absolute;left:0;top:320px;width:568px;text-align:center;font-size:38px">Crunching the numbers…</div>
+        <div class="dotsrow" id="dots"><i></i><i></i><i></i></div>
+      </div>
+      <!-- 6: result -->
+      <div class="screen" id="scr5">
+        <svg class="abs" width="150" height="150" viewBox="0 0 150 150" style="left:209px;top:0">
+          <circle cx="75" cy="75" r="64" fill="#CDEFD9" id="resCircleBg"/>
+          <circle id="resCircle" cx="75" cy="75" r="64" fill="none" stroke="#2FA36B" stroke-width="12" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" transform="rotate(-90 75 75)"/>
+          <path id="resTick" d="M46 77 L66 97 L104 57" fill="none" stroke="#1F7A55" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="90" stroke-dashoffset="90"/>
+        </svg>
+        <div class="q" id="resTitle" style="position:absolute;left:0;top:168px;width:568px;text-align:center;font-size:44px">Your quote is ready! 🎉</div>
+        <div class="resrow" style="top:250px"><span class="chk">✓</span>General Liability</div>
+        <div class="resrow" style="top:306px"><span class="chk">✓</span>Product Liability</div>
+        <div class="resrow" style="top:362px"><span class="chk">✓</span>Property</div>
+        <div class="resrow" style="top:418px"><span class="chk">✓</span>Crime &amp; Theft</div>
+      </div>
+    </div>
+    <div class="foot" id="foot">🌿 Cannabis insurance specialists</div>
+  </div>
+
+  <!-- mascot hands (over card edge) -->
+  <svg class="abs" id="hands" width="160" height="40" viewBox="0 0 160 40" overflow="visible">
+    <circle cx="36" cy="20" r="16" fill="#2FA36B" stroke="#16352B" stroke-width="6"/>
+    <circle cx="124" cy="20" r="16" fill="#2FA36B" stroke="#16352B" stroke-width="6"/>
+  </svg>
+
+  <div id="confettiLayer"></div>
+
+  <!-- cursor -->
+  <div class="abs ripple" id="ripple"></div>
+  <svg class="abs cursor" id="cursor" width="52" height="60" viewBox="0 0 52 60" overflow="visible">
+    <path d="M6 4 L6 48 L18 37 L27 56 L36 52 L27 33 L44 33 Z" fill="#fff" stroke="#16352B" stroke-width="5" stroke-linejoin="round"/>
+  </svg>
+
+  <!-- end card -->
+  <div class="abs endword" id="endWord">CARMA</div>
+  <div class="abs endpill" id="endPill">QuickQuote ⚡</div>
+  <div class="abs tagline" id="endTag">Cannabis insurance quotes,<br>minus the paperwork pile.</div>
+  <div class="abs url" id="endUrl">carma365.com/quote</div>
+  <div class="abs fine" id="endFine">QuickQuote is for eligible dispensary accounts. Coverage subject to underwriting review.</div>
+  <div id="hearts"></div>
+</div>
+<button id="replay">↻ Replay</button>
+
+<script>
+const DURATION = 21;
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const P = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const inCubic = (x) => x * x * x;
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const outBack = (x, s = 1.9) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
+const outElastic = (x) => (x === 0 || x === 1 ? x : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * (2 * Math.PI) / 3) + 1);
+// deterministic PRNG
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+
+const sizes = new Map();
+function place(el, x, y, { r = 0, s = 1, sx = 1, sy = 1, o = 1, ox = 0.5, oy = 0.5 } = {}) {
+  if (!sizes.has(el)) sizes.set(el, [el.offsetWidth || +el.getAttribute('width'), el.offsetHeight || +el.getAttribute('height')]);
+  const [w, h] = sizes.get(el);
+  el.style.transformOrigin = `${ox * 100}% ${oy * 100}%`;
+  el.style.transform = `translate(${(x - w * ox).toFixed(2)}px, ${(y - h * oy).toFixed(2)}px) rotate(${r.toFixed(2)}deg) scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})`;
+  el.style.opacity = o.toFixed(3);
+  el.style.display = o <= 0.001 ? 'none' : '';
+}
+const show = (el, on) => { el.style.opacity = on ? 1 : 0; };
+// pop-in / pop-out envelope for scale
+function popEnv(t, a, b, inDur = 0.45, outDur = 0.3) {
+  if (t < a || t > b) return 0;
+  if (t < a + inDur) return outBack(P(t, a, a + inDur));
+  if (t > b - outDur) return 1 - inCubic(P(t, b - outDur, b));
+  return 1;
+}
+const bump = (t, c, d = 0.35, amp = 1) => (t >= c && t <= c + d ? Math.sin(Math.PI * (t - c) / d) * amp : 0);
+
+// ---------- timeline constants ----------
+const CARD = { x: 540, y: 590 };                  // card centre when fully up
+const CARD_L = CARD.x - 320, CARD_T = CARD.y - 390; // card top-left (220, 200)
+const SCR_L = CARD_L + 36 + 5, SCR_T = CARD_T + 190 + 5; // screen origin in stage coords (+border)
+const CLICKS = [5.9, 8.6, 11.9, 12.25, 12.6, 12.95, 13.45];
+const CHIP_CLICK = [11.9, 12.25, 12.6, 12.95]; // chips 0..3
+const PERCH = { x: 780, y: CARD_T - 52 };
+const STEP_KEYS = [[6.5, 6.95], [9.0, 9.45], [11.2, 11.65], [13.7, 14.15], [15.0, 15.4]];
+const TYPE_START = 7.35, TYPE_STEP = 0.16, WORD = 'Colorado';
+const SLIDE = [10.0, 10.95], KNOB_FROM = 0.08, KNOB_TO = 0.36;
+
+// ---------- build papers ----------
+const papersEl = $('papers');
+const PAPERS = [];
+{
+  const r = rng(7);
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('div');
+    el.className = 'abs paper';
+    el.innerHTML = '<i></i><i></i><i></i><i></i>';
+    papersEl.appendChild(el);
+    const col = i % 6, row = Math.floor(i / 6);
+    PAPERS.push({
+      el,
+      t0: 1.95 + i * 0.075,
+      x0: 300 + r() * 480, r0: (r() - 0.5) * 160,
+      x1: 335 + col * 78 + (r() - 0.5) * 30 + (row % 2) * 30, y1: 520 - row * 46 + (r() - 0.5) * 16,
+      r1: (r() - 0.5) * 50,
+      blow: 3.35 + r() * 0.25, bvx: -1600 - r() * 900, bvy: -500 - r() * 700, bspin: -500 - r() * 600,
+    });
+  }
+}
+// ---------- confetti ----------
+const confLayer = $('confettiLayer');
+const CONF = [];
+{
+  const r = rng(42);
+  const cols = ['#2FA36B', '#FFC94D', '#FF7A6B', '#5FD49A', '#8FD3FF', '#FFB3B3', '#16352B'];
+  for (let i = 0; i < 110; i++) {
+    const el = document.createElement('div');
+    el.className = 'abs confetti';
+    el.style.background = cols[i % cols.length];
+    if (i % 3 === 0) { el.style.width = '13px'; el.style.height = '13px'; el.style.borderRadius = '50%'; }
+    confLayer.appendChild(el);
+    const ang = (-90 + (r() - 0.5) * 150) * Math.PI / 180, sp = 700 + r() * 1100;
+    CONF.push({ el, t0: 15.25 + r() * 0.12, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, spin: (r() - 0.5) * 1400, sway: r() * 6 });
+  }
+}
+// ---------- sparkles & hearts ----------
+const SPARK = [];
+{
+  const r = rng(3), layer = $('sparkles');
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('div');
+    el.className = 'abs';
+    el.style.cssText += 'width:22px;height:22px';
+    el.innerHTML = '<svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 0 Q13 9 22 11 Q13 13 11 22 Q9 13 0 11 Q9 9 11 0Z" fill="' + (i % 2 ? '#FFC94D' : '#5FD49A') + '"/></svg>';
+    layer.appendChild(el);
+    SPARK.push({ el, x: 40 + r() * 1000, y: 40 + r() * 1000, ph: r() * 6.28, sp: 0.6 + r() });
+  }
+}
+const HEARTS = [];
+{
+  const r = rng(11), layer = $('hearts');
+  for (let i = 0; i < 9; i++) {
+    const el = document.createElement('div');
+    el.className = 'abs heart';
+    el.textContent = ['💚', '✨', '💛'][i % 3];
+    layer.appendChild(el);
+    HEARTS.push({ el, t0: 17.6 + i * 0.32, x: i % 2 ? 300 + r() * 90 : 650 + r() * 70, drift: (r() - 0.5) * 60 });
+  }
+}
+const chips = [...document.querySelectorAll('.chip')];
+chips.forEach((c) => { c.innerHTML = '<span class="plus">+</span><span class="chk" style="display:none">✓</span>' + c.innerHTML; });
+
+// ---------- sound cue list (read by the renderer) ----------
+window.SFX = [
+  { t: 0.15, k: 'pop' }, { t: 0.55, k: 'pop2' }, { t: 1.95, k: 'pop2' },
+  ...PAPERS.map((p) => ({ t: p.t0 + 0.42, k: 'paper' })),
+  { t: 3.25, k: 'whoosh' }, { t: 3.5, k: 'sparkle' }, { t: 3.45, k: 'pop2' },
+  { t: 3.95, k: 'whoosh' }, { t: 4.55, k: 'boing' },
+  ...CLICKS.map((t) => ({ t, k: 'click' })),
+  ...CLICKS.slice(0, 5).map((t) => ({ t: t + 0.05, k: 'ding' })),
+  ...STEP_KEYS.slice(0, 3).map(([a]) => ({ t: a, k: 'swish' })),
+  ...[...WORD.slice(0, 4)].map((_, i) => ({ t: TYPE_START + i * TYPE_STEP, k: 'type' })),
+  ...Array.from({ length: 9 }, (_, i) => ({ t: SLIDE[0] + i * (SLIDE[1] - SLIDE[0]) / 9, k: 'tick' })),
+  { t: 13.7, k: 'swish' }, { t: 14.0, k: 'blip' }, { t: 14.3, k: 'blip' }, { t: 14.6, k: 'blip' },
+  { t: 15.05, k: 'chime' }, { t: 15.25, k: 'confetti' },
+  { t: 16.75, k: 'whoosh' }, { t: 17.3, k: 'boing' },
+  { t: 17.75, k: 'pop' }, { t: 18.05, k: 'pop2' }, { t: 18.35, k: 'pop2' }, { t: 18.65, k: 'sparkle' },
+];
+window.DURATION = DURATION;
+
+// ---------- cursor path ----------
+const tileC = [SCR_L + 137, SCR_T + 195];
+const rowC = [SCR_L + 200, SCR_T + 226 + 40];
+const knob0 = [SCR_L + 20 + KNOB_FROM * 528, SCR_T + 326];
+const knob1 = [SCR_L + 20 + KNOB_TO * 528, SCR_T + 326];
+const chipC = [[SCR_L + 145, SCR_T + 155], [SCR_L + 437, SCR_T + 155], [SCR_L + 98, SCR_T + 241], [SCR_L + 390, SCR_T + 241]];
+const btnC = [SCR_L + 330, SCR_T + 452];
+const CUR = [
+  [4.6, 1000, 1150], [5.0, 760, 860], [5.75, tileC[0], tileC[1]], [6.2, tileC[0], tileC[1]], [6.9, 900, 720],
+  [8.05, 900, 720], [8.45, rowC[0], rowC[1]], [8.8, rowC[0], rowC[1]], [9.4, 880, 820],
+  [9.6, 880, 820], [9.95, knob0[0], knob0[1]], [SLIDE[0], knob0[0], knob0[1]], [SLIDE[1], knob1[0], knob1[1]], [11.3, 880, 760],
+  [11.75, ...chipC[0]], [11.9, ...chipC[0]], [12.15, ...chipC[1]], [12.25, ...chipC[1]], [12.5, ...chipC[2]], [12.6, ...chipC[2]],
+  [12.85, ...chipC[3]], [12.95, ...chipC[3]], [13.3, ...btnC], [13.7, ...btnC], [14.2, 1000, 1150],
+];
+function cursorAt(t) {
+  if (t <= CUR[0][0]) return [CUR[0][1], CUR[0][2]];
+  for (let i = 0; i < CUR.length - 1; i++) {
+    const [a, x0, y0] = CUR[i], [b, x1, y1] = CUR[i + 1];
+    if (t <= b) { const k = inOut(P(t, a, b)); return [lerp(x0, x1, k), lerp(y0, y1, k)]; }
+  }
+  const l = CUR[CUR.length - 1]; return [l[1], l[2]];
+}
+
+function blinkK(t, period, off) { const m = (t + off) % period; return m < 0.13 ? 1 - Math.sin(Math.PI * m / 0.13) * 0.9 : 1; }
+
+// ================= render one frame =================
+function setTime(t) {
+  // background drift
+  place($('blob0'), 170 + Math.sin(t * 0.5) * 30, 190 + Math.cos(t * 0.4) * 25);
+  place($('blob1'), 930 + Math.cos(t * 0.45) * 30, 330 + Math.sin(t * 0.5) * 30);
+  place($('blob2'), 870 + Math.sin(t * 0.35) * 25, 960 + Math.cos(t * 0.5) * 20);
+  SPARK.forEach((s) => {
+    const k = 0.5 + 0.5 * Math.sin(t * s.sp * 2 + s.ph);
+    place(s.el, s.x, s.y + Math.sin(t + s.ph) * 10, { s: 0.4 + k * 0.8, r: t * 40 * s.sp, o: 0.25 + k * 0.5 });
+  });
+
+  // ---- headlines
+  const H = [[$('h1'), 0.5, 1.95], [$('h2'), 1.95, 3.3], [$('h3'), 3.4, 4.35]];
+  H.forEach(([el, a, b], i) => {
+    const e = popEnv(t, a, b, 0.5, 0.25);
+    place(el, 540, 190 + (1 - e) * 20, { s: 0.6 + 0.4 * e, o: e > 0 ? Math.min(1, e * 1.5) : 0, r: i === 1 ? Math.sin(t * 9) * 1.2 * e : 0 });
+  });
+
+  // ---- storefront
+  const store = $('store');
+  const worried = t > 2.2 && t < 3.45;
+  const happy = t >= 16.9;
+  let sx = 540, sy = 905, ss = 1.2, sr = 0, sq = 1;
+  if (t < 17) {
+    const pin = P(t, 0.1, 0.65);
+    ss = 1.2 * (t < 0.65 ? outBack(pin, 2.2) : 1);
+    // squash when papers land
+    PAPERS.forEach((p) => { sq -= bump(t, p.t0 + 0.4, 0.18, 0.035); });
+    if (worried) sr = Math.sin(t * 38) * 1.4;
+    if (t > 3.3 && t < 3.6) sq += bump(t, 3.3, 0.3, 0.06);
+    const out = inCubic(P(t, 3.9, 4.5));
+    sy += out * 800;
+  } else {
+    const back = outBack(P(t, 17.05, 17.65), 1.6);
+    sy = lerp(1500, 905, back); ss = 0.78;
+    sq = 1 + bump(t, 17.65, 0.3, 0.05) + bump(t, 19.3, 0.3, 0.04);
+    sr = Math.sin(t * 3) * 1.5;
+  }
+  place(store, sx, sy, { s: ss, sx: 1 / Math.sqrt(sq), sy: sq, r: sr, oy: 1, o: ss > 0.01 && sy < 1400 ? 1 : 0 });
+  const sBlink = blinkK(t, 2.9, 0.4);
+  $('sEyeL').setAttribute('transform', `translate(0 ${204 * (1 - sBlink)}) scale(1 ${sBlink})`);
+  $('sEyeR').setAttribute('transform', `translate(0 ${204 * (1 - sBlink)}) scale(1 ${sBlink})`);
+  show($('sEyesOpen'), !happy); show($('sEyesHappy'), happy);
+  show($('sBrows'), worried); show($('sSweat'), worried);
+  $('sSweat').setAttribute('transform', `translate(0 ${worried ? ((t * 60) % 18) : 0})`);
+  show($('sMouthWorry'), worried); show($('sMouthSmile'), !worried && !happy); show($('sMouthBig'), happy);
+  show($('sBlush'), !worried);
+
+  // ---- papers
+  PAPERS.forEach((p) => {
+    if (t < p.t0) { place(p.el, 0, 0, { o: 0 }); return; }
+    let x, y, r;
+    const fall = P(t, p.t0, p.t0 + 0.42);
+    if (t < p.blow) {
+      const k = fall < 1 ? inCubic(fall) : 1;
+      x = lerp(p.x0, p.x1, outCubic(fall)); y = lerp(-140, p.y1, k); r = lerp(p.r0, p.r1, outCubic(fall));
+      if (fall >= 1) { y -= bump(t, p.t0 + 0.42, 0.2, 10); }
+      const drop = inCubic(P(t, 3.9, 4.5)) * 800; // ride along if still there
+      y += drop;
+    } else {
+      const d = t - p.blow;
+      x = p.x1 + p.bvx * d; y = p.y1 + p.bvy * d + 900 * d * d; r = p.r1 + p.bspin * d;
+    }
+    place(p.el, x, y, { r, o: x > -200 ? 1 : 0 });
+  });
+
+  // ---- card
+  const card = $('card');
+  let cy, cs = 1, cr = 0;
+  if (t < 16.6) {
+    const up = P(t, 3.95, 4.6);
+    cy = lerp(1600, CARD.y, outBack(up, 1.3));
+    cr = (1 - outCubic(up)) * 8;
+    cs = 1 + bump(t, 15.05, 0.35, 0.03);
+  } else {
+    const dn = inCubic(P(t, 16.6, 17.1));
+    cy = lerp(CARD.y, 1700, dn); cr = dn * -10;
+  }
+  place(card, CARD.x, cy, { s: cs, r: cr, o: t > 3.9 && t < 17.2 ? 1 : 0 });
+
+  // step position (continuous)
+  let step = 0;
+  STEP_KEYS.forEach(([a, b]) => { step += inOut(P(t, a, b)); });
+  for (let i = 0; i < 6; i++) {
+    const el = $('scr' + i);
+    const dx = (i - step) * 620;
+    el.style.transform = `translateX(${dx.toFixed(1)}px)`;
+    el.style.visibility = Math.abs(i - step) < 1.2 ? 'visible' : 'hidden';
+  }
+  document.querySelectorAll('#progress b').forEach((b, k) => { b.style.width = (clamp(step - k) * 100).toFixed(1) + '%'; });
+  $('stepLabel').textContent = step < 3.5 ? `Step ${Math.min(4, Math.round(step) + 1)} of 4` : (step < 4.5 ? 'Almost there…' : 'All done!');
+
+  // screen 0: tile select
+  const tile = $('tile0'), tsel = t >= CLICKS[0];
+  tile.style.borderColor = tsel ? 'var(--green)' : 'var(--line)';
+  tile.style.background = tsel ? 'var(--mint-lt)' : '#fff';
+  tile.style.transform = `scale(${(1 - bump(t, CLICKS[0], 0.25, 0.06) + (t > 5.5 && t < CLICKS[0] ? 0.03 : 0)).toFixed(3)})`;
+  const tchk = tile.querySelector('.chk');
+  const tk = outBack(P(t, CLICKS[0], CLICKS[0] + 0.3), 2.5);
+  tchk.style.transform = `scale(${tk})`; tchk.style.opacity = tsel ? 1 : 0;
+
+  // screen 1: typing
+  const nTyped = t < TYPE_START ? 0 : Math.min(4, Math.floor((t - TYPE_START) / TYPE_STEP) + 1);
+  const picked = t >= CLICKS[1] + 0.05;
+  $('typed').textContent = picked ? WORD : WORD.slice(0, nTyped);
+  $('ph').style.display = nTyped === 0 && !picked ? '' : 'none';
+  $('caret').style.opacity = !picked && Math.floor(t * 3) % 2 === 0 ? 1 : 0;
+  $('field').style.borderColor = t > 7.1 ? 'var(--green)' : 'var(--line)';
+  const fchk = $('fieldChk'); fchk.style.opacity = picked ? 1 : 0; fchk.style.transform = `scale(${outBack(P(t, CLICKS[1], CLICKS[1] + 0.3), 2.5)})`;
+  const ddk = t < 8.0 ? 0 : (picked ? 1 - P(t, CLICKS[1] + 0.05, CLICKS[1] + 0.2) : outCubic(P(t, 8.0, 8.2)));
+  const dd = $('dropdown'); dd.style.opacity = ddk; dd.style.transform = `translateY(${(1 - ddk) * -12}px)`;
+  $('ddRow').style.background = t > 8.35 ? 'var(--mint-lt)' : '#fff';
+
+  // screen 2: slider
+  const kf = lerp(KNOB_FROM, KNOB_TO, inOut(P(t, SLIDE[0], SLIDE[1])));
+  $('trackFill').style.width = (kf * 100).toFixed(2) + '%';
+  const knob = $('knob');
+  const grab = t > 9.95 && t < SLIDE[1] + 0.1;
+  place(knob, 20 + kf * 528, 326, { s: grab ? 1.15 : 1 });
+  $('bigval').textContent = '$' + (kf * 5).toFixed(1) + 'M';
+  $('bigval').style.transform = `scale(${1 + (grab ? Math.abs(Math.sin(t * 20)) * 0.03 : 0)})`;
+
+  // screen 3: chips + button
+  chips.forEach((c, i) => {
+    const on = i < 4 && t >= CHIP_CLICK[i];
+    c.style.borderColor = on ? 'var(--green)' : 'var(--line)';
+    c.style.background = on ? 'var(--mint-lt)' : '#fff';
+    c.style.color = on ? 'var(--green-dk)' : 'var(--ink)';
+    c.querySelector('.plus').style.display = on ? 'none' : '';
+    const ck = c.querySelector('.chk'); ck.style.display = on ? 'flex' : 'none';
+    ck.style.transform = on ? `scale(${outBack(P(t, CHIP_CLICK[i], CHIP_CLICK[i] + 0.25), 2.5)})` : '';
+    c.style.transform = i < 4 ? `scale(${(1 - bump(t, CHIP_CLICK[i], 0.22, 0.08)).toFixed(3)})` : '';
+  });
+  const btn = $('goBtn'), bp = t >= CLICKS[6] && t < CLICKS[6] + 0.18;
+  btn.style.transform = `translateY(${bp ? 6 : 0}px) scale(${1 + (t > 13.0 && t < CLICKS[6] ? Math.sin(t * 14) * 0.015 : 0)})`;
+  btn.style.boxShadow = bp ? '0 1px 0 var(--green-dk)' : '0 7px 0 var(--green-dk)';
+  btn.style.opacity = t > 12.9 ? 1 : 0.45;
+
+  // screen 4: loading
+  $('spinArc').setAttribute('stroke-dashoffset', (-t * 520).toFixed(1));
+  document.querySelectorAll('#dots i').forEach((d, i) => {
+    d.style.transform = `translateY(${(-Math.max(0, Math.sin(t * 9 - i * 0.9)) * 22).toFixed(1)}px)`;
+  });
+
+  // screen 5: result
+  const rc = outCubic(P(t, 15.05, 15.5));
+  $('resCircle').setAttribute('stroke-dashoffset', (402 * (1 - rc)).toFixed(1));
+  $('resTick').setAttribute('stroke-dashoffset', (90 * (1 - outCubic(P(t, 15.35, 15.65)))).toFixed(1));
+  const rt = $('resTitle'); const rtk = outBack(P(t, 15.3, 15.75), 2);
+  rt.style.transform = `scale(${0.6 + 0.4 * rtk})`; rt.style.opacity = clamp(rtk * 2);
+  document.querySelectorAll('.resrow').forEach((row, i) => {
+    const k = outBack(P(t, 15.6 + i * 0.14, 15.95 + i * 0.14), 1.6);
+    row.style.opacity = clamp(k * 1.5); row.style.transform = `translateX(${(1 - k) * 60}px)`;
+  });
+  $('foot').textContent = step > 4.5 ? '🌿 A CARMA specialist will help you finalize' : '🌿 Cannabis insurance specialists';
+
+  // ---- mascot
+  const m = $('mascot');
+  let mx, my, mr = 0, ms = 1, mo = 1, mHappy = false, mOpen = false;
+  const hover = Math.sin(t * 4) * 6;
+  if (t < 3.2) { mo = 0; mx = 1300; my = 400; }
+  else if (t < 3.95) {
+    const k = outBack(P(t, 3.2, 3.6), 1.4);
+    mx = lerp(1300, 900, k); my = lerp(380, 700, k) + hover; mr = (1 - k) * -40 + Math.sin(t * 6) * 4;
+    mOpen = t < 3.9; mHappy = t > 3.5;
+  } else if (t < 16.65) {
+    const j = P(t, 3.95, 4.55);
+    if (j < 1) {
+      mx = lerp(900, PERCH.x, inOut(j)); my = lerp(700, PERCH.y, inOut(j)) - Math.sin(Math.PI * j) * 260; mr = j * 360;
+    } else {
+      mx = PERCH.x; my = PERCH.y + Math.sin(t * 3) * 3;
+      CLICKS.forEach((c) => { my -= bump(t, c + 0.05, 0.35, 26); });
+      mr = Math.sin(t * 2.2) * 3;
+      // peek toward the cursor
+      const [cx] = cursorAt(t); mr += clamp((cx - PERCH.x) / 30, -8, 8);
+      // loading: big hop & spin
+      if (t > 13.75 && t < 15.0) { const lj = P(t, 13.8, 14.6); my -= Math.sin(Math.PI * lj) * 95; mr = inOut(lj) * -360; }
+      if (t > 15.05) { my -= bump(t, 15.05, 0.45, 60) + bump(t, 15.55, 0.4, 40); mHappy = true; }
+    }
+    mOpen = (t > 15.05 && t < 16.2);
+  } else {
+    const j = P(t, 16.65, 17.35);
+    mx = lerp(PERCH.x, 860, inOut(j)); my = lerp(PERCH.y, 850, inOut(j)) - Math.sin(Math.PI * j) * 200; mr = j * 360;
+    if (j >= 1) { my = 850 - Math.abs(Math.sin((t - 17.35) * 5)) * 40 * Math.exp(-(t - 17.35) * 0.6); mr = Math.sin(t * 5) * 10; }
+    mHappy = true; mOpen = t > 17.35;
+  }
+  // blink
+  const mb = blinkK(t, 2.4, 1.1);
+  $('mEyeL').setAttribute('transform', `translate(0 ${98 * (1 - mb)}) scale(1 ${mb})`);
+  $('mEyeR').setAttribute('transform', `translate(0 ${98 * (1 - mb)}) scale(1 ${mb})`);
+  show($('mEyesOpen'), !mHappy); show($('mEyesHappy'), mHappy);
+  show($('mMouth'), !mOpen); show($('mMouthOpen'), mOpen);
+  place(m, mx, my, { r: mr, s: ms, o: mo });
+  // hands over the card while perched
+  const perched = t > 4.55 && t < 16.65 && !(t > 13.75 && t < 14.7);
+  place($('hands'), PERCH.x, cy - 390 + 4, { o: perched ? 1 : 0, s: perched ? 1 : 0.2 });
+
+  // ---- cursor
+  const [cxp, cyp] = cursorAt(t);
+  const pressed = CLICKS.some((c) => t >= c - 0.06 && t < c + 0.1) || (t > SLIDE[0] - 0.05 && t < SLIDE[1]);
+  place($('cursor'), cxp, cyp, { ox: 0.12, oy: 0.07, s: pressed ? 0.85 : 1, o: t > 4.6 && t < 14.2 ? 1 : 0, r: -4 });
+  let rip = null;
+  CLICKS.forEach((c) => { if (t >= c && t < c + 0.4) rip = c; });
+  if (rip !== null) { const k = P(t, rip, rip + 0.4); const [rx, ry] = cursorAt(rip); place($('ripple'), rx + 4, ry + 4, { s: 0.3 + k * 0.9, o: 1 - k }); }
+  else place($('ripple'), 0, 0, { o: 0 });
+
+  // ---- confetti
+  CONF.forEach((c) => {
+    const d = t - c.t0;
+    if (d < 0 || d > 2.4) { place(c.el, 0, 0, { o: 0 }); return; }
+    const x = 540 + c.vx * d * Math.exp(-d * 0.9) + Math.sin(d * 6 + c.sway) * 20;
+    const y = 330 + c.vy * d * Math.exp(-d * 0.9) + 520 * d * d;
+    place(c.el, x, y, { r: c.spin * d, o: 1 - P(d, 1.8, 2.4), sy: Math.cos(d * 9 + c.sway) });
+  });
+
+  // ---- end card
+  const ew = outBack(P(t, 17.7, 18.2), 2);
+  place($('endWord'), 540, 150, { s: 0.5 + 0.5 * ew, o: clamp(ew * 2), r: (1 - ew) * -6 });
+  const ep = outElastic(P(t, 18.0, 18.9));
+  place($('endPill'), 540, 262, { s: ep, o: t > 18 ? 1 : 0, r: -3 + Math.sin(t * 2.5) * 1.5 });
+  const et = outCubic(P(t, 18.3, 18.8));
+  place($('endTag'), 540, 385 + (1 - et) * 30, { o: et });
+  const eu = outBack(P(t, 18.6, 19.05), 2.2);
+  place($('endUrl'), 540, 500, { s: eu, o: clamp(eu * 2) });
+  place($('endFine'), 540, 1045, { o: P(t, 19.0, 19.5) * 0.9 });
+  HEARTS.forEach((h) => {
+    const d = t - h.t0;
+    if (d < 0 || d > 2.2) { place(h.el, 0, 0, { o: 0 }); return; }
+    place(h.el, h.x + Math.sin(d * 3) * 18 + h.drift * d * 0.3, 860 - d * 110, { s: outBack(P(d, 0, 0.3)), o: 1 - P(d, 1.5, 2.2) });
+  });
+}
+window.setTime = setTime;
+
+// ---------- live playback (skipped when rendering) ----------
+const params = new URLSearchParams(location.search);
+function fit() {
+  const s = Math.min(innerWidth / 1080, innerHeight / 1080);
+  $('stage').style.transform = `scale(${s})`;
+}
+if (!params.has('render')) {
+  document.body.classList.add('live');
+  fit(); addEventListener('resize', fit);
+  let start = null;
+  document.fonts.ready.then(() => {
+    const loop = (now) => {
+      if (start === null) start = now;
+      const t = ((now - start) / 1000) % DURATION;
+      setTime(t);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  });
+  $('replay').onclick = () => { start = null; };
+} else {
+  setTime(0);
+}
+</script>
+</body>
+</html>
