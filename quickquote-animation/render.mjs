@@ -11,10 +11,12 @@ const args = process.argv.slice(2);
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
-const page = await browser.newPage({ viewport: { width: 1080, height: 1080 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });
 await page.goto(pathToFileURL(path.join(here, 'index.html')).href + '?render=1');
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(500);
+const [W, H] = await page.evaluate(() => window.STAGE);
+await page.setViewportSize({ width: W, height: H });
 const stage = await page.$('#stage');
 
 if (args[0] === '--stills') {

@@ -6,312 +6,266 @@
 <title>CARMA QuickQuote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Montserrat:wght@800&family=Playfair+Display:wght@400;700;800&family=IBM+Plex+Mono:wght@500;600&display=block" rel="stylesheet">
 <style>
   :root {
-    --ink: #16352B;
-    --green: #2FA36B;
-    --green-dk: #1F7A55;
-    --mint: #CDEFD9;
-    --mint-lt: #E6F7EC;
-    --cream: #FFF7E8;
-    --sun: #FFC94D;
-    --coral: #FF7A6B;
-    --pink: #FFB3B3;
-    --gray: #7B8A84;
-    --line: #E4E9E6;
+    --ink: #232833;
+    --logo: #343434;
+    --coral: #EC5F59;
+    --coral-dk: #D65A50;
+    --coral-lt: #FBE3E0;
+    --green: #426844;
+    --green-lt: #EDF4EE;
+    --mint: #DDF1E6;
+    --check: #3F9B6B;
+    --blue-lt: #E3EEFA;
+    --cream: #F7F5F0;
+    --gray: #5F636B;
+    --gray-lt: #9A9EA5;
+    --line: #E3E1DC;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; background: #10261F; overflow: hidden; }
-  body { display: flex; align-items: center; justify-content: center; font-family: Nunito, sans-serif; color: var(--ink); }
-  #stage {
-    position: relative; width: 1080px; height: 1080px; overflow: hidden;
-    background: var(--cream); transform-origin: center center; flex: none;
-  }
+  html, body { width: 100%; height: 100%; background: #1c1c1c; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; font-family: 'Inter Tight', sans-serif; color: var(--ink); }
+  #stage { position: relative; width: 1080px; height: 1350px; overflow: hidden; background: var(--cream); transform-origin: center; flex: none; }
   .abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
-  .blob { border-radius: 50%; background: var(--mint-lt); }
-  .headline {
-    font-family: Fredoka, sans-serif; font-weight: 600; font-size: 66px; line-height: 1.1;
-    color: var(--ink); text-align: center; width: 1000px; white-space: nowrap;
-  }
-  .headline em { font-style: normal; color: var(--green); }
-  .paper {
-    width: 76px; height: 96px; background: #fff; border: 4px solid var(--ink); border-radius: 8px;
-    padding: 14px 10px; display: flex; flex-direction: column; gap: 9px;
-  }
-  .paper i { display: block; height: 5px; border-radius: 3px; background: #C9D3CE; }
-  .paper i:nth-child(1) { width: 70%; background: var(--coral); }
-  .paper i:nth-child(4) { width: 55%; }
 
-  /* Quote card */
-  #card {
-    width: 640px; height: 780px; background: #fff; border-radius: 40px;
-    border: 5px solid var(--ink); box-shadow: 0 16px 0 var(--ink); overflow: hidden;
-  }
-  #card .hdr { position: absolute; left: 36px; top: 30px; right: 36px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
-  .wordmark { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 38px; letter-spacing: 1px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
-  .wordmark .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--green); display: inline-block; }
-  .pill { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 24px; background: var(--mint); color: var(--green-dk); padding: 8px 18px; border-radius: 999px; }
-  #progress { position: absolute; left: 36px; top: 112px; width: 568px; height: 12px; display: flex; gap: 12px; }
-  #progress .seg { flex: 1; background: var(--line); border-radius: 6px; overflow: hidden; }
-  #progress .seg b { display: block; height: 100%; width: 0; background: var(--green); border-radius: 6px; }
-  #stepLabel { position: absolute; left: 36px; top: 138px; font-weight: 800; font-size: 20px; color: var(--gray); letter-spacing: .5px; text-transform: uppercase; }
-  #screens { position: absolute; left: 36px; top: 190px; width: 568px; height: 500px; overflow: hidden; }
-  .screen { position: absolute; left: 0; top: 0; width: 568px; height: 500px; }
-  .q { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 40px; line-height: 1.1; color: var(--ink); }
-  .tile {
-    position: absolute; width: 274px; height: 150px; border: 4px solid var(--line); border-radius: 26px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff;
-  }
-  .tile .emo { font-size: 50px; line-height: 1; }
-  .tile .lbl { font-weight: 800; font-size: 25px; }
-  .tile .chk, .chip .chk {
-    position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: var(--green);
-    color: #fff; font-weight: 900; font-size: 21px; display: flex; align-items: center; justify-content: center;
-  }
-  .field {
-    position: absolute; left: 0; top: 120px; width: 568px; height: 92px; border: 4px solid var(--line); border-radius: 24px;
-    display: flex; align-items: center; padding: 0 24px; gap: 14px; font-weight: 800; font-size: 32px; background: #fff;
-  }
-  .field .ph { color: #B7C2BD; }
-  .caret { display: inline-block; width: 3px; height: 38px; background: var(--ink); margin-left: 2px; vertical-align: middle; }
-  .dropdown { position: absolute; left: 0; top: 226px; width: 568px; border: 4px solid var(--line); border-radius: 24px; background: #fff; overflow: hidden; }
-  .dropdown .row { height: 72px; display: flex; align-items: center; padding: 0 24px; font-weight: 800; font-size: 28px; gap: 12px; }
-  .dropdown .row small { font-size: 20px; color: var(--gray); font-weight: 700; margin-left: auto; }
-  .bigval { position: absolute; left: 0; top: 130px; width: 568px; text-align: center; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 88px; color: var(--green-dk); }
-  .per { position: absolute; left: 0; top: 240px; width: 568px; text-align: center; font-weight: 800; font-size: 22px; color: var(--gray); }
-  .track { position: absolute; left: 20px; top: 318px; width: 528px; height: 16px; border-radius: 8px; background: var(--line); }
-  .track b { display: block; height: 100%; border-radius: 8px; background: var(--green); }
-  .knob { width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 6px solid var(--green); box-shadow: 0 4px 0 var(--green-dk); }
-  .ends { position: absolute; top: 356px; font-weight: 800; font-size: 20px; color: var(--gray); }
-  .chip {
-    position: absolute; height: 70px; border: 4px solid var(--line); border-radius: 999px; background: #fff;
-    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; gap: 8px; white-space: nowrap;
-  }
-  .chip .chk { position: static; width: 28px; height: 28px; font-size: 17px; }
-  .chip .plus { color: var(--gray); font-weight: 900; font-size: 26px; width: 28px; text-align: center; }
-  .btn {
-    position: absolute; left: 0; top: 410px; width: 568px; height: 84px; border-radius: 26px; background: var(--green);
-    color: #fff; font-family: Fredoka, sans-serif; font-weight: 600; font-size: 34px; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 7px 0 var(--green-dk);
-  }
-  .foot { position: absolute; left: 0; right: 0; top: 712px; text-align: center; font-weight: 700; font-size: 19px; color: var(--gray); }
-  .dotsrow { position: absolute; left: 0; top: 380px; width: 568px; display: flex; justify-content: center; gap: 18px; }
-  .dotsrow i { width: 22px; height: 22px; border-radius: 50%; background: var(--green); display: block; }
-  .resrow { position: absolute; left: 60px; width: 448px; height: 52px; display: flex; align-items: center; gap: 14px; font-weight: 800; font-size: 27px; }
-  .resrow .chk { width: 36px; height: 36px; border-radius: 50%; background: var(--mint); color: var(--green-dk); font-weight: 900; font-size: 22px; display: flex; align-items: center; justify-content: center; flex: none; }
+  /* logo (type recreation: swap for the real SVG when available) */
+  .logo { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; color: var(--logo); }
+  .logo b { font-family: Montserrat, sans-serif; font-weight: 800; letter-spacing: -0.01em; }
+  .logo span { font-family: 'Playfair Display', serif; font-weight: 400; position: relative; }
+  .logo span::after { content: ''; position: absolute; background: var(--coral); transform: skewX(-24deg); }
+  .logo.lg b { font-size: 108px; }
+  .logo.lg span { font-size: 34px; letter-spacing: 0.42em; margin: -4px 0 0 12px; }
+  .logo.lg span::after { width: 16px; height: 42px; right: -18px; top: 4px; }
+  .logo.sm b { font-size: 40px; }
+  .logo.sm span { font-size: 12.5px; letter-spacing: 0.42em; margin: -1px 0 0 5px; }
+  .logo.sm span::after { width: 6px; height: 16px; right: -7px; top: 1px; }
 
-  .cursor { width: 52px; height: 60px; }
-  .ripple { width: 90px; height: 90px; border-radius: 50%; border: 6px solid var(--green); }
+  /* scene 1 */
+  .kicker { font-weight: 600; font-size: 26px; letter-spacing: 0.3em; color: var(--ink); white-space: nowrap; }
+  .hero { font-weight: 800; font-size: 100px; letter-spacing: -0.035em; line-height: 1; color: #111; white-space: nowrap; text-align: center; }
+  .hero em { font-style: normal; color: var(--coral); }
+  .paper { width: 128px; height: 160px; background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(35,40,51,.14), 0 0 0 1.5px #E7E4DE; padding: 14px 12px; }
+  .paper .t { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13px; color: var(--coral-dk); margin-bottom: 10px; white-space: nowrap; }
+  .paper i { display: block; height: 6px; border-radius: 3px; background: #E4E2DD; margin-bottom: 9px; }
+  .paper i:nth-of-type(2) { width: 80%; } .paper i:nth-of-type(4) { width: 60%; }
+
+  /* captions (site carousel style) */
+  .cap { width: 1000px; text-align: center; }
+  .cap .n { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 24px; letter-spacing: 0.2em; color: var(--coral); }
+  .cap .t { font-weight: 700; font-size: 60px; letter-spacing: -0.035em; color: #151515; margin-top: 8px; line-height: 1.05; }
+  .cap .s { font-weight: 400; font-size: 28px; color: #474b52; margin: 12px auto 0; width: 880px; line-height: 1.3; }
+
+  /* phone */
+  #phone { width: 560px; height: 1000px; background: #161616; border-radius: 92px; padding: 16px; box-shadow: 0 40px 80px rgba(35,40,51,.22), inset 0 0 0 3px #2c2c2c; }
+  #screen { position: relative; width: 528px; height: 968px; background: #fff; border-radius: 78px; overflow: hidden; }
+  .island { position: absolute; left: 194px; top: 18px; width: 140px; height: 40px; border-radius: 20px; background: #161616; z-index: 5; }
+  .appbar { position: absolute; left: 28px; top: 80px; right: 28px; height: 64px; display: flex; align-items: center; gap: 20px; }
+  .appbar .div { width: 2px; height: 36px; background: var(--line); }
+  .appbar .qq { font-weight: 600; font-size: 25px; color: #151515; margin-top: 8px; }
+  .tabs { position: absolute; left: 0; right: 0; top: 156px; height: 52px; border-top: 2px solid #EEECE8; border-bottom: 2px solid #EEECE8; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; }
+  .tabs .tab { font-weight: 700; font-size: 14px; letter-spacing: 0.08em; color: var(--gray-lt); }
+  .tabs .tab.on { color: #151515; }
+  #tabBar { position: absolute; bottom: -2px; left: 0; height: 3px; background: var(--coral); border-radius: 2px; }
+  #content { position: absolute; left: 0; top: 210px; width: 528px; height: 758px; overflow: hidden; }
+  .scr { position: absolute; left: 0; top: 0; width: 528px; height: 758px; padding: 34px 28px 0; }
+  .lab { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 15px; letter-spacing: 0.12em; color: var(--coral-dk); text-transform: uppercase; }
+  .qh { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 40px; line-height: 1.12; color: var(--ink); margin-top: 12px; letter-spacing: -0.01em; }
+  .qs { font-size: 18px; color: var(--gray); line-height: 1.35; margin-top: 12px; }
+  .card { position: relative; border: 2px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-top: 14px; background: #fff; }
+  .card b { display: block; font-weight: 700; font-size: 20px; color: #1b1b1b; }
+  .card small { display: block; font-size: 15px; color: var(--gray); margin-top: 3px; }
+  .card.dim { border-style: dashed; background: #F8FAFD; }
+  .card.dim b, .card.dim small { color: #A5ABB5; }
+  .badge { position: absolute; right: 16px; top: 16px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 11px; letter-spacing: 0.12em; color: #7c828c; border: 1.5px solid var(--line); border-radius: 4px; padding: 2px 7px; background: #fff; }
+  .card .ck { position: absolute; right: 18px; top: 50%; margin-top: -16px; width: 32px; height: 32px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; }
+  .note { font-style: italic; font-size: 15px; color: var(--gray); margin-top: 16px; line-height: 1.35; }
+  .grp { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 13px; letter-spacing: 0.14em; color: #7c828c; margin: 18px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+  .chip { height: 44px; padding: 0 16px; border: 2px solid var(--line); border-radius: 22px; display: flex; align-items: center; font-weight: 700; font-size: 16px; color: #1b1b1b; background: #fff; white-space: nowrap; }
+  .chip.on { background: var(--green); color: #fff; border-color: var(--green); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--coral); }
+  .fl { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 13px; letter-spacing: 0.14em; color: #7c828c; margin: 22px 0 8px; }
+  .inp { height: 58px; border: 2px solid var(--line); border-radius: 10px; display: flex; align-items: center; padding: 0 18px; font-weight: 600; font-size: 21px; color: #1b1b1b; }
+  .inp.on { border-color: var(--ink); }
+  .inp .ph { color: #B3B7BE; font-weight: 500; }
+  .inp .chev { margin-left: auto; color: var(--gray-lt); font-size: 18px; }
+  .caret { display: inline-block; width: 2px; height: 26px; background: var(--ink); margin-left: 2px; }
+  .seg { display: flex; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; height: 54px; }
+  .seg div { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #1b1b1b; border-right: 2px solid var(--line); }
+  .seg div:last-child { border-right: 0; }
+  .seg div.on { background: var(--green); color: #fff; }
+  .go { margin-top: 30px; height: 64px; border-radius: 32px; background: var(--coral); color: #fff; font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .ih { font-weight: 700; font-size: 36px; letter-spacing: -0.02em; color: #151515; margin-top: 10px; }
+  .box { border: 2px solid #EEECE8; border-radius: 16px; padding: 22px 24px; margin-top: 18px; text-align: center; }
+  .box .k { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13px; letter-spacing: 0.14em; color: #555a62; line-height: 1.5; }
+  .price { font-weight: 800; font-size: 84px; letter-spacing: -0.02em; color: var(--coral-dk); line-height: 1.05; margin-top: 6px; }
+  .box .d { font-size: 15.5px; color: #555a62; line-height: 1.4; margin-top: 6px; }
+  .brk { border: 2px solid #EEECE8; border-radius: 16px; padding: 18px 24px 8px; margin-top: 14px; text-align: left; }
+  .brk h4 { font-weight: 700; font-size: 19px; color: #151515; margin-bottom: 4px; }
+  .row { display: flex; justify-content: space-between; font-size: 17px; color: #3a3e45; padding: 10px 0; border-bottom: 1.5px solid #F0EEEA; }
+  .row:last-child { border-bottom: 0; }
+  .row b { font-weight: 700; color: #151515; }
+  #loading { position: absolute; left: 0; top: 0; width: 528px; height: 758px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+  #loading .qh { font-size: 34px; margin: 0; }
+
+  .illus { font-size: 18px; color: #8a8e95; width: 400px; text-align: center; }
+  .touch { width: 64px; height: 64px; border-radius: 50%; background: rgba(35,40,51,.16); border: 3px solid rgba(35,40,51,.38); }
+  .ripple { width: 90px; height: 90px; border-radius: 50%; border: 4px solid var(--coral); }
+  .timer { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 10px 20px 10px 12px; box-shadow: 0 8px 20px rgba(35,40,51,.08); white-space: nowrap; }
+  .timer .ic { width: 38px; height: 38px; border-radius: 50%; background: var(--coral-lt); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; }
+  .timer .v { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 28px; color: var(--ink); }
   .confetti { width: 16px; height: 10px; border-radius: 3px; }
 
-  /* End card */
-  .endword { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 132px; letter-spacing: 4px; color: var(--ink); width: 1000px; text-align: center; line-height: 1; }
-  .endpill { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 50px; color: #fff; background: var(--green); padding: 10px 38px 14px; border-radius: 999px; box-shadow: 0 7px 0 var(--green-dk); white-space: nowrap; }
-  .tagline { font-family: Fredoka, sans-serif; font-weight: 500; font-size: 42px; color: var(--ink); text-align: center; width: 1000px; line-height: 1.2; }
-  .url { font-weight: 900; font-size: 34px; color: var(--ink); background: #fff; border: 4px solid var(--ink); padding: 10px 30px; border-radius: 999px; white-space: nowrap; }
-  .fine { font-weight: 700; font-size: 19px; color: var(--gray); width: 1000px; text-align: center; }
-  .heart { font-size: 40px; line-height: 1; }
+  /* end card */
+  .endh { font-weight: 800; font-size: 86px; letter-spacing: -0.035em; line-height: 1.02; color: #111; text-align: center; white-space: nowrap; }
+  .ends { font-weight: 500; font-size: 36px; color: #3b3f46; text-align: center; white-space: nowrap; letter-spacing: -0.01em; }
+  .feat { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 18px; padding: 14px 22px 14px 14px; box-shadow: 0 10px 26px rgba(35,40,51,.10), 0 0 0 1.5px #ECEAE5; font-weight: 700; font-size: 25px; color: #1b1b1b; white-space: nowrap; }
+  .feat .ic { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25px; font-weight: 800; }
+  .cta { display: flex; align-items: center; gap: 16px; background: var(--coral); color: #1b1b1b; font-weight: 700; font-size: 42px; padding: 20px 48px; border-radius: 999px; white-space: nowrap; letter-spacing: -0.01em; box-shadow: 0 10px 24px rgba(236,95,89,.3); }
+  .url { font-weight: 700; font-size: 30px; color: var(--ink); white-space: nowrap; }
+  .fine { font-size: 20px; color: #6a6e75; white-space: nowrap; }
 
-  #replay { position: fixed; right: 16px; bottom: 16px; font: 700 15px Nunito, sans-serif; background: #fff; color: var(--ink); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 15px 'Inter Tight', sans-serif; background: #fff; color: #222; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; display: none; }
   body.live #replay { display: block; }
 </style>
 </head>
 <body>
 <div id="stage">
-  <!-- background -->
-  <div class="abs blob" id="blob0" style="width:520px;height:520px"></div>
-  <div class="abs blob" id="blob1" style="width:380px;height:380px"></div>
-  <div class="abs blob" id="blob2" style="width:300px;height:300px"></div>
-  <div id="sparkles"></div>
+  <!-- scene 1 -->
+  <div class="abs kicker" id="kicker">FOR RETAIL INSURANCE AGENTS</div>
+  <div class="abs hero" id="hero1">Cannabis account?</div>
+  <div class="abs hero" id="hero2"><em>Cue the paperwork.</em></div>
+  <div class="abs hero" id="hero3">Get <em>QuickQuote.</em></div>
 
-  <!-- scene 1 headlines -->
-  <div class="abs headline" id="h1">Running a cannabis business?</div>
-  <div class="abs headline" id="h2">Insurance paperwork piling up?</div>
-  <div class="abs headline" id="h3">Meet <em>QuickQuote</em> ✨</div>
+  <!-- step captions -->
+  <div class="abs cap" id="cap0"><div class="n">01 / 04</div><div class="t">Choose coverage</div><div class="s">Select only the coverage lines the account needs.</div></div>
+  <div class="abs cap" id="cap1"><div class="n">02 / 04</div><div class="t">Describe the operation</div><div class="s">The next questions adapt to what the insured actually does.</div></div>
+  <div class="abs cap" id="cap2"><div class="n">03 / 04</div><div class="t">Add the rating details</div><div class="s">Only what the selected lines need.</div></div>
+  <div class="abs cap" id="cap3"><div class="n">04 / 04</div><div class="t">Review the indication</div><div class="s">See the estimated premium, taxes, and fees before moving to a firm quote.</div></div>
 
-  <!-- storefront character -->
-  <svg class="abs" id="store" width="420" height="380" viewBox="0 0 420 380" overflow="visible">
-    <g stroke="#16352B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
-      <rect x="30" y="112" width="360" height="258" rx="20" fill="#fff"/>
-      <!-- sign -->
-      <rect x="110" y="8" width="200" height="62" rx="16" fill="#16352B"/>
-      <!-- awning -->
-      <path d="M22 72 H398 L398 130 Q375 156 351 130 Q327 156 304 130 Q280 156 257 130 Q233 156 210 130 Q186 156 163 130 Q139 156 116 130 Q92 156 69 130 Q45 156 22 130 Z" fill="#2FA36B"/>
-      <path d="M69 72 V130 M163 72 V130 M257 72 V130 M351 72 V130" stroke-width="0"/>
-      <!-- window & door -->
-      <rect x="60" y="272" width="170" height="80" rx="12" fill="#E6F7EC"/>
-      <rect x="262" y="262" width="100" height="108" rx="12" fill="#FFC94D"/>
-      <circle cx="342" cy="318" r="6" fill="#16352B" stroke-width="0"/>
+  <!-- folder mascot -->
+  <svg class="abs" id="folder" width="260" height="250" viewBox="0 0 260 250" overflow="visible">
+    <ellipse cx="130" cy="246" rx="100" ry="10" fill="#232833" opacity=".10"/>
+    <g fill="#343434"><ellipse cx="86" cy="238" rx="22" ry="11"/><ellipse cx="174" cy="238" rx="22" ry="11"/></g>
+    <rect x="18" y="8" width="100" height="44" rx="12" fill="#C9483F"/>
+    <rect x="10" y="30" width="240" height="200" rx="18" fill="#C9483F"/>
+    <g transform="rotate(-6 100 80)"><rect x="30" y="22" width="150" height="130" rx="8" fill="#F4F1EC"/></g>
+    <g transform="rotate(5 160 70)"><rect x="92" y="14" width="150" height="130" rx="8" fill="#fff"/>
+      <rect x="108" y="32" width="70" height="7" rx="3.5" fill="#EC5F59"/><rect x="108" y="48" width="110" height="6" rx="3" fill="#E4E2DD"/><rect x="108" y="62" width="90" height="6" rx="3" fill="#E4E2DD"/></g>
+    <g id="fCard">
+      <rect x="52" y="-18" width="156" height="118" rx="10" fill="#fff" stroke="#E3E1DC" stroke-width="2"/>
+      <text x="68" y="6" style="font-family:'IBM Plex Mono',monospace" font-weight="600" font-size="11" letter-spacing="1.5" fill="#555a62">INDICATION</text>
+      <text x="66" y="48" style="font-family:'Inter Tight',sans-serif" font-weight="800" font-size="36" fill="#D65A50">$1,511</text>
     </g>
-    <!-- awning stripes -->
-    <g fill="#fff" opacity=".9">
-      <path d="M116 76 H163 V128 Q151 146 139.5 136 Q128 146 116 128 Z"/>
-      <path d="M210 76 H257 V128 Q245 146 233.5 136 Q222 146 210 128 Z"/>
-      <path d="M304 76 H351 V128 Q339 146 327.5 136 Q316 146 304 128 Z"/>
-      <path d="M26 76 H69 V128 Q57 146 45.5 136 Q34 146 26 128 Z"/>
+    <g id="fFront">
+      <path d="M4 80 Q4 66 18 66 H242 Q256 66 256 80 L249 216 Q248 232 232 232 H28 Q12 232 11 216 Z" fill="#EC5F59"/>
+      <path d="M8 80 Q8 70 18 70 H242 Q252 70 252 80 L251 92 H9 Z" fill="#F27B74" opacity=".8"/>
+      <g id="fBrows" stroke="#343434" stroke-width="6" stroke-linecap="round" fill="none"><path d="M76 126 L102 116"/><path d="M184 126 L158 116"/></g>
+      <g id="fEyes" fill="#2a2a2a">
+        <g id="fEyeL"><ellipse cx="96" cy="148" rx="11" ry="14"/><circle cx="100" cy="142" r="4" fill="#fff"/></g>
+        <g id="fEyeR"><ellipse cx="164" cy="148" rx="11" ry="14"/><circle cx="168" cy="142" r="4" fill="#fff"/></g>
+      </g>
+      <g id="fEyesHappy" stroke="#2a2a2a" stroke-width="7" stroke-linecap="round" fill="none"><path d="M83 152 Q96 134 109 152"/><path d="M151 152 Q164 134 177 152"/></g>
+      <g fill="#FFB5AC" opacity=".95"><ellipse cx="68" cy="176" rx="16" ry="9"/><ellipse cx="192" cy="176" rx="16" ry="9"/></g>
+      <path id="fMouth" d="M118 174 Q130 186 142 174" stroke="#2a2a2a" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path id="fMouthBig" d="M112 170 Q130 204 148 170 Z" fill="#2a2a2a" stroke="#2a2a2a" stroke-width="5" stroke-linejoin="round"/>
+      <ellipse id="fMouthO" cx="130" cy="182" rx="15" ry="18" fill="#2a2a2a"/>
+      <path id="fMouthWorry" d="M112 184 q6 -8 12 0 t12 0 t12 0" stroke="#2a2a2a" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path id="fSweat" d="M222 100 q14 22 0 30 q-14 -8 0 -30 Z" fill="#9FD2F5"/>
     </g>
-    <!-- sign leaf -->
-    <g transform="translate(210 39)">
-      <path d="M0 16 V-6" stroke="#CDEFD9" stroke-width="4" stroke-linecap="round"/>
-      <ellipse cx="-9" cy="-6" rx="10" ry="5" fill="#2FA36B" transform="rotate(-35 -9 -6)"/>
-      <ellipse cx="9" cy="-6" rx="10" ry="5" fill="#2FA36B" transform="rotate(35 9 -6)"/>
-      <ellipse cx="0" cy="-12" rx="5" ry="11" fill="#5FD49A"/>
-    </g>
-    <!-- plants in window -->
-    <g stroke="#16352B" stroke-width="5" stroke-linejoin="round">
-      <path d="M90 352 l6 -26 h26 l6 26 Z" fill="#FF7A6B"/>
-      <path d="M160 352 l6 -26 h26 l6 26 Z" fill="#FFC94D"/>
-    </g>
-    <g fill="#2FA36B">
-      <ellipse cx="102" cy="316" rx="8" ry="14" transform="rotate(-25 102 316)"/>
-      <ellipse cx="116" cy="316" rx="8" ry="14" transform="rotate(25 116 316)"/>
-      <ellipse cx="172" cy="316" rx="8" ry="14" transform="rotate(-25 172 316)"/>
-      <ellipse cx="186" cy="316" rx="8" ry="14" transform="rotate(25 186 316)"/>
-    </g>
-    <!-- face -->
-    <g id="sBrows" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none">
-      <path d="M140 168 L168 178"/><path d="M280 168 L252 178"/>
-    </g>
-    <g id="sEyesOpen" fill="#16352B">
-      <g id="sEyeL"><ellipse cx="160" cy="204" rx="11" ry="15"/><circle cx="164" cy="198" r="4" fill="#fff"/></g>
-      <g id="sEyeR"><ellipse cx="260" cy="204" rx="11" ry="15"/><circle cx="264" cy="198" r="4" fill="#fff"/></g>
-    </g>
-    <g id="sEyesHappy" stroke="#16352B" stroke-width="7" stroke-linecap="round" fill="none">
-      <path d="M146 208 Q160 188 174 208"/><path d="M246 208 Q260 188 274 208"/>
-    </g>
-    <g id="sBlush" fill="#FFB3B3"><ellipse cx="128" cy="232" rx="18" ry="10"/><ellipse cx="292" cy="232" rx="18" ry="10"/></g>
-    <path id="sMouthSmile" d="M192 232 Q210 248 228 232" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none"/>
-    <path id="sMouthBig" d="M186 228 Q210 266 234 228 Z" fill="#16352B" stroke="#16352B" stroke-width="5" stroke-linejoin="round"/>
-    <path id="sMouthWorry" d="M188 242 q7 -9 14 0 t14 0 t14 0" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none"/>
-    <path id="sSweat" d="M318 150 q14 22 0 30 q-14 -8 0 -30 Z" fill="#8FD3FF" stroke="#16352B" stroke-width="4"/>
   </svg>
 
-  <!-- falling paperwork -->
   <div id="papers"></div>
 
-  <!-- mascot (behind card) -->
-  <svg class="abs" id="mascot" width="160" height="190" viewBox="0 0 160 190" overflow="visible">
-    <g id="mBody">
-      <path d="M80 30 V8" stroke="#16352B" stroke-width="6" stroke-linecap="round"/>
-      <ellipse cx="66" cy="12" rx="15" ry="7" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(-30 66 12)"/>
-      <ellipse cx="94" cy="12" rx="15" ry="7" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(30 94 12)"/>
-      <path d="M80 30 C108 42 132 44 148 46 L148 100 C148 145 118 170 80 184 C42 170 12 145 12 100 L12 46 C28 44 52 42 80 30 Z" fill="#2FA36B" stroke="#16352B" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M80 48 C100 56 118 58 130 60 L130 100 C130 132 110 150 80 162 C50 150 30 132 30 100 L30 60 C42 58 60 56 80 48 Z" fill="#5FD49A" opacity=".45"/>
-      <g id="mEyesOpen" fill="#16352B">
-        <g id="mEyeL"><ellipse cx="58" cy="98" rx="9" ry="13"/><circle cx="61" cy="93" r="3.5" fill="#fff"/></g>
-        <g id="mEyeR"><ellipse cx="102" cy="98" rx="9" ry="13"/><circle cx="105" cy="93" r="3.5" fill="#fff"/></g>
-      </g>
-      <g id="mEyesHappy" stroke="#16352B" stroke-width="6" stroke-linecap="round" fill="none">
-        <path d="M47 102 Q58 86 69 102"/><path d="M91 102 Q102 86 113 102"/>
-      </g>
-      <g fill="#FFB3B3" opacity=".9"><ellipse cx="40" cy="120" rx="11" ry="7"/><ellipse cx="120" cy="120" rx="11" ry="7"/></g>
-      <path id="mMouth" d="M70 120 Q80 130 90 120" stroke="#16352B" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <path id="mMouthOpen" d="M68 118 Q80 142 92 118 Z" fill="#16352B" stroke="#16352B" stroke-width="4" stroke-linejoin="round"/>
-    </g>
-  </svg>
-
-  <!-- quote card -->
-  <div class="abs" id="card">
-    <div class="hdr"><div class="wordmark"><span class="dot"></span>CARMA</div><div class="pill">QuickQuote ⚡</div></div>
-    <div id="progress"><div class="seg"><b></b></div><div class="seg"><b></b></div><div class="seg"><b></b></div><div class="seg"><b></b></div></div>
-    <div id="stepLabel">Step 1 of 4</div>
-    <div id="screens">
-      <!-- 1: business type -->
-      <div class="screen" id="scr0">
-        <div class="q">What kind of cannabis<br>business do you run?</div>
-        <div class="tile" id="tile0" style="left:0;top:120px"><div class="emo">🛍️</div><div class="lbl">Dispensary</div><div class="chk">✓</div></div>
-        <div class="tile" style="left:294px;top:120px"><div class="emo">🌱</div><div class="lbl">Cultivator</div></div>
-        <div class="tile" style="left:0;top:290px"><div class="emo">🧪</div><div class="lbl">Processor</div></div>
-        <div class="tile" style="left:294px;top:290px"><div class="emo">🚚</div><div class="lbl">Delivery</div></div>
-      </div>
-      <!-- 2: state -->
-      <div class="screen" id="scr1">
-        <div class="q">Where are you<br>located?</div>
-        <div class="field" id="field"><span style="font-size:34px">📍</span><span id="typed"></span><span class="caret" id="caret"></span><span class="ph" id="ph">Start typing a state…</span><span style="margin-left:auto" id="fieldChk"><span class="chk" style="position:static;width:38px;height:38px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900">✓</span></span></div>
-        <div class="dropdown" id="dropdown">
-          <div class="row" id="ddRow">🏔️ Colorado <small>CO</small></div>
-          <div class="row" style="color:#B7C2BD">Connecticut <small>CT</small></div>
+  <!-- phone -->
+  <div class="abs" id="phone">
+    <div id="screen">
+      <div class="island"></div>
+      <div class="appbar"><div class="logo sm"><b>CARMA</b><span>insurance</span></div><div class="div"></div><div class="qq">QuickQuote</div></div>
+      <div class="tabs" id="tabs"><div class="tab">COVERAGE</div><div class="tab">ELIGIBILITY</div><div class="tab">RATE</div><div class="tab">INDICATION</div><div id="tabBar"></div></div>
+      <div id="content">
+        <div class="scr" id="s0">
+          <div class="lab">Step 1 — Coverage selection</div>
+          <div class="qh">Which lines is this risk shopping?</div>
+          <div class="qs">Any combination works — including monoline Products.</div>
+          <div class="card" id="cardGL"><b>General Liability</b><small>Occurrence form · no deductible</small><div class="ck">✓</div></div>
+          <div class="card"><b>Products / Completed Ops</b><small>Claims-made DITL · monoline OK</small></div>
+          <div class="card"><b>Commercial Property</b><small>Special form · $5M max per location</small></div>
+          <div class="card dim"><b>Inland Marine</b><small>Transit limits via Property Enhancement</small><div class="badge">COMING SOON</div></div>
+          <div class="note">Excess Liability is available by formal submission through Carma Brokerage.</div>
+        </div>
+        <div class="scr" id="s1">
+          <div class="lab">Step 2 — Risk type</div>
+          <div class="qh">What does the insured actually do?</div>
+          <div class="qs">Select every operation. The agent never sees a class code.</div>
+          <div class="grp">CULTIVATION</div>
+          <div class="chips"><div class="chip" id="chipIndoor">Cultivation — Indoor</div><div class="chip">Cultivation — Outdoor</div><div class="chip">Cultivation — Greenhouse</div></div>
+          <div class="grp">PROCESSING</div>
+          <div class="chips"><div class="chip">Extraction / Manufacturing</div><div class="chip">Lab Testing</div></div>
+          <div class="grp">MOVEMENT</div>
+          <div class="chips"><div class="chip" id="chipWholesale">Wholesale / Distribution</div><div class="chip">Transportation / Delivery</div></div>
+        </div>
+        <div class="scr" id="s2">
+          <div class="lab">Step 3 — Rate</div>
+          <div class="qh">A few rating details.</div>
+          <div class="fl">STATE</div>
+          <div class="inp" id="inpState"><span class="ph" id="statePh">Select a state</span><span id="stateVal">Colorado</span><span class="chev">▾</span></div>
+          <div class="fl">ANNUAL GROSS SALES</div>
+          <div class="inp" id="inpSales"><span class="ph" id="salesPh">$0</span><span id="salesVal"></span><span class="caret" id="caret"></span></div>
+          <div class="fl">YEARS IN BUSINESS</div>
+          <div class="seg"><div>Under 3</div><div id="seg35">3–5</div><div>5+</div></div>
+          <div class="go" id="goBtn">Get indication <span>→</span></div>
+        </div>
+        <div class="scr" id="s3">
+          <div class="lab">Step 4</div>
+          <div class="ih">Your indication</div>
+          <div class="qs" style="margin-top:8px">Good for 30 days. Send it to the insured or move it to a firm quote.</div>
+          <div class="box">
+            <div class="k">ESTIMATED TOTAL COST: PREMIUM,<br>FEES, AND SURPLUS LINES TAXES</div>
+            <div class="price" id="price">$0</div>
+            <div class="d">Non-binding indication. Final premium,<br>taxes, and fees may differ.</div>
+          </div>
+          <div class="brk">
+            <h4>Premium, fees, and surplus lines taxes</h4>
+            <div class="row"><span>General Liability</span><b>$1,000</b></div>
+            <div class="row"><span>Terrorism (TRIA)</span><b>$25</b></div>
+            <div class="row"><span>Admin fee</span><b>$225</b></div>
+            <div class="row"><span>UW fee</span><b>$175</b></div>
+            <div class="row"><span>Est. surplus lines taxes and fees</span><b>$86</b></div>
+          </div>
+        </div>
+        <div id="loading">
+          <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="48" fill="none" stroke="#F1EFEB" stroke-width="10"/><circle id="spinArc" cx="60" cy="60" r="48" fill="none" stroke="#EC5F59" stroke-width="10" stroke-linecap="round" stroke-dasharray="90 300"/></svg>
+          <div class="qh">Rating the risk…</div>
         </div>
       </div>
-      <!-- 3: revenue -->
-      <div class="screen" id="scr2">
-        <div class="q">About how much do you<br>sell in a year?</div>
-        <div class="bigval" id="bigval">$0.4M</div>
-        <div class="per">in annual sales</div>
-        <div class="track"><b id="trackFill"></b></div>
-        <div class="abs knob" id="knob"></div>
-        <div class="ends" style="left:20px">$0</div>
-        <div class="ends" style="right:20px">$5M+</div>
-      </div>
-      <!-- 4: coverages -->
-      <div class="screen" id="scr3">
-        <div class="q">What should we<br>cover?</div>
-        <div class="chip" data-i="0" style="left:0;top:120px;width:290px">General Liability</div>
-        <div class="chip" data-i="1" style="left:306px;top:120px;width:262px">Product Liability</div>
-        <div class="chip" data-i="2" style="left:0;top:206px;width:196px">Property</div>
-        <div class="chip" data-i="3" style="left:212px;top:206px;width:356px">Crime &amp; Theft</div>
-        <div class="chip" data-i="4" style="left:0;top:292px;width:170px">Cyber</div>
-        <div class="chip" data-i="5" style="left:186px;top:292px;width:236px">Workers' Comp</div>
-        <div class="btn" id="goBtn">Get my quote →</div>
-      </div>
-      <!-- 5: loading -->
-      <div class="screen" id="scr4">
-        <svg class="abs" id="spinner" width="200" height="200" viewBox="0 0 200 200" style="left:184px;top:90px">
-          <circle cx="100" cy="100" r="78" fill="none" stroke="#E4E9E6" stroke-width="16"/>
-          <circle id="spinArc" cx="100" cy="100" r="78" fill="none" stroke="#2FA36B" stroke-width="16" stroke-linecap="round" stroke-dasharray="140 400"/>
-          <g transform="translate(100 104)">
-            <ellipse cx="-14" cy="-4" rx="18" ry="9" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(-35 -14 -4)"/>
-            <ellipse cx="14" cy="-4" rx="18" ry="9" fill="#5FD49A" stroke="#16352B" stroke-width="4" transform="rotate(35 14 -4)"/>
-            <ellipse cx="0" cy="-12" rx="9" ry="20" fill="#2FA36B" stroke="#16352B" stroke-width="4"/>
-          </g>
-        </svg>
-        <div class="q" style="position:absolute;left:0;top:320px;width:568px;text-align:center;font-size:38px">Crunching the numbers…</div>
-        <div class="dotsrow" id="dots"><i></i><i></i><i></i></div>
-      </div>
-      <!-- 6: result -->
-      <div class="screen" id="scr5">
-        <svg class="abs" width="150" height="150" viewBox="0 0 150 150" style="left:209px;top:0">
-          <circle cx="75" cy="75" r="64" fill="#CDEFD9" id="resCircleBg"/>
-          <circle id="resCircle" cx="75" cy="75" r="64" fill="none" stroke="#2FA36B" stroke-width="12" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" transform="rotate(-90 75 75)"/>
-          <path id="resTick" d="M46 77 L66 97 L104 57" fill="none" stroke="#1F7A55" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="90" stroke-dashoffset="90"/>
-        </svg>
-        <div class="q" id="resTitle" style="position:absolute;left:0;top:168px;width:568px;text-align:center;font-size:44px">Your quote is ready! 🎉</div>
-        <div class="resrow" style="top:250px"><span class="chk">✓</span>General Liability</div>
-        <div class="resrow" style="top:306px"><span class="chk">✓</span>Product Liability</div>
-        <div class="resrow" style="top:362px"><span class="chk">✓</span>Property</div>
-        <div class="resrow" style="top:418px"><span class="chk">✓</span>Crime &amp; Theft</div>
-      </div>
     </div>
-    <div class="foot" id="foot">🌿 Cannabis insurance specialists</div>
   </div>
+  <div class="abs illus" id="illus">Illustrative screen</div>
 
-  <!-- mascot hands (over card edge) -->
-  <svg class="abs" id="hands" width="160" height="40" viewBox="0 0 160 40" overflow="visible">
-    <circle cx="36" cy="20" r="16" fill="#2FA36B" stroke="#16352B" stroke-width="6"/>
-    <circle cx="124" cy="20" r="16" fill="#2FA36B" stroke="#16352B" stroke-width="6"/>
-  </svg>
-
+  <div class="abs timer" id="timer"><div class="ic">⚡</div><div class="v" id="timerV">0:00</div></div>
+  <div class="abs ripple" id="ripple"></div>
+  <div class="abs touch" id="touch"></div>
   <div id="confettiLayer"></div>
 
-  <!-- cursor -->
-  <div class="abs ripple" id="ripple"></div>
-  <svg class="abs cursor" id="cursor" width="52" height="60" viewBox="0 0 52 60" overflow="visible">
-    <path d="M6 4 L6 48 L18 37 L27 56 L36 52 L27 33 L44 33 Z" fill="#fff" stroke="#16352B" stroke-width="5" stroke-linejoin="round"/>
-  </svg>
-
   <!-- end card -->
-  <div class="abs endword" id="endWord">CARMA</div>
-  <div class="abs endpill" id="endPill">QuickQuote ⚡</div>
-  <div class="abs tagline" id="endTag">Cannabis insurance quotes,<br>minus the paperwork pile.</div>
-  <div class="abs url" id="endUrl">carma365.com/quote</div>
-  <div class="abs fine" id="endFine">QuickQuote is for eligible dispensary accounts. Coverage subject to underwriting review.</div>
-  <div id="hearts"></div>
+  <div class="abs logo lg" id="endLogo"><b>CARMA</b><span>insurance</span></div>
+  <div class="abs kicker" id="endKicker" style="font-size:22px">FOR RETAIL INSURANCE AGENTS</div>
+  <div class="abs endh" id="endH1">Cannabis account?</div>
+  <div class="abs endh" id="endH2">Get QuickQuote access.</div>
+  <div class="abs ends" id="endSub">Commercial insurance. A clearer starting point.</div>
+  <div class="abs feat" id="feat0"><div class="ic" style="background:var(--mint);color:var(--check)">✓</div>Eligible account</div>
+  <div class="abs feat" id="feat1"><div class="ic" style="background:var(--blue-lt)">📄</div>Nonbinding indication</div>
+  <div class="abs feat" id="feat2"><div class="ic" style="background:var(--coral-lt);color:var(--coral)">⚡</div>3 minutes or less</div>
+  <div class="abs cta" id="endCta">Request access <span>→</span></div>
+  <div class="abs url" id="endUrl">carma365.com</div>
+  <div class="abs fine" id="endFine">Non-binding indications for eligible cannabis accounts.</div>
 </div>
 <button id="replay">↻ Replay</button>
 
 <script>
-const DURATION = 21;
+const W = 1080, H = 1350, DURATION = 23.5;
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -320,9 +274,9 @@ const outCubic = (x) => 1 - Math.pow(1 - x, 3);
 const inCubic = (x) => x * x * x;
 const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const outBack = (x, s = 1.9) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
-const outElastic = (x) => (x === 0 || x === 1 ? x : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * (2 * Math.PI) / 3) + 1);
-// deterministic PRNG
+const bump = (t, c, d = 0.35, amp = 1) => (t >= c && t <= c + d ? Math.sin(Math.PI * (t - c) / d) * amp : 0);
 function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+const show = (el, on) => { el.style.opacity = on ? 1 : 0; };
 
 const sizes = new Map();
 function place(el, x, y, { r = 0, s = 1, sx = 1, sy = 1, o = 1, ox = 0.5, oy = 0.5 } = {}) {
@@ -333,389 +287,320 @@ function place(el, x, y, { r = 0, s = 1, sx = 1, sy = 1, o = 1, ox = 0.5, oy = 0
   el.style.opacity = o.toFixed(3);
   el.style.display = o <= 0.001 ? 'none' : '';
 }
-const show = (el, on) => { el.style.opacity = on ? 1 : 0; };
-// pop-in / pop-out envelope for scale
 function popEnv(t, a, b, inDur = 0.45, outDur = 0.3) {
   if (t < a || t > b) return 0;
   if (t < a + inDur) return outBack(P(t, a, a + inDur));
   if (t > b - outDur) return 1 - inCubic(P(t, b - outDur, b));
   return 1;
 }
-const bump = (t, c, d = 0.35, amp = 1) => (t >= c && t <= c + d ? Math.sin(Math.PI * (t - c) / d) * amp : 0);
+function blinkK(t, period, off) { const m = (t + off) % period; return m < 0.13 ? 1 - Math.sin(Math.PI * m / 0.13) * 0.9 : 1; }
+const money = (v) => '$' + Math.round(v).toLocaleString('en-US');
 
-// ---------- timeline constants ----------
-const CARD = { x: 540, y: 590 };                  // card centre when fully up
-const CARD_L = CARD.x - 320, CARD_T = CARD.y - 390; // card top-left (220, 200)
-const SCR_L = CARD_L + 36 + 5, SCR_T = CARD_T + 190 + 5; // screen origin in stage coords (+border)
-const CLICKS = [5.9, 8.6, 11.9, 12.25, 12.6, 12.95, 13.45];
-const CHIP_CLICK = [11.9, 12.25, 12.6, 12.95]; // chips 0..3
-const PERCH = { x: 780, y: CARD_T - 52 };
-const STEP_KEYS = [[6.5, 6.95], [9.0, 9.45], [11.2, 11.65], [13.7, 14.15], [15.0, 15.4]];
-const TYPE_START = 7.35, TYPE_STEP = 0.16, WORD = 'Colorado';
-const SLIDE = [10.0, 10.95], KNOB_FROM = 0.08, KNOB_TO = 0.36;
+// ---------------- timeline ----------------
+const PHONE = { x: 540, y: 790 };               // phone centre at rest
+const TAPS = { gl: 6.3, indoor: 9.0, wholesale: 9.8, state: 11.55, sales: 11.95, seg: 13.05, go: 13.6 };
+const TAP_LIST = Object.values(TAPS);
+const STEP_KEYS = [[7.6, 8.0], [10.6, 11.0], [14.12, 14.17]];
+const LOAD = [13.75, 14.55];
+const SALES = '$1,250,000', SALES_T0 = 12.05, SALES_DT = 0.065;
+const COUNT = [14.8, 15.6];
+const CELEB = 15.6;
+const FOLDER_HOME = { x: 540, y: 1165, s: 1.9 };
+const FOLDER_PEEK = { x: 150, y: 1175, s: 0.85 };
+const FOLDER_END = { x: 540, y: 845, s: 1.1 };
+const CAPS = [[5.0, 8.0], [8.0, 11.0], [11.0, 14.5], [14.5, 18.0]];
 
-// ---------- build papers ----------
-const papersEl = $('papers');
+// ---------------- build dynamic bits ----------------
 const PAPERS = [];
 {
-  const r = rng(7);
-  for (let i = 0; i < 16; i++) {
+  const r = rng(9), layer = $('papers');
+  const labels = ['ACORD 125', 'Supplemental', 'Loss runs', 'Class code?', 'ACORD 126', 'SOV', 'Questionnaire', 'ACORD 140', 'Supplemental', 'Loss runs', 'Class code?', 'ACORD 125'];
+  labels.forEach((lab, i) => {
     const el = document.createElement('div');
     el.className = 'abs paper';
-    el.innerHTML = '<i></i><i></i><i></i><i></i>';
-    papersEl.appendChild(el);
-    const col = i % 6, row = Math.floor(i / 6);
+    el.innerHTML = `<div class="t">${lab}</div><i></i><i></i><i></i><i></i><i></i>`;
+    layer.appendChild(el);
+    const col = i % 4, row = Math.floor(i / 4);
     PAPERS.push({
-      el,
-      t0: 1.95 + i * 0.075,
-      x0: 300 + r() * 480, r0: (r() - 0.5) * 160,
-      x1: 335 + col * 78 + (r() - 0.5) * 30 + (row % 2) * 30, y1: 520 - row * 46 + (r() - 0.5) * 16,
-      r1: (r() - 0.5) * 50,
-      blow: 3.35 + r() * 0.25, bvx: -1600 - r() * 900, bvy: -500 - r() * 700, bspin: -500 - r() * 600,
+      el, t0: 1.45 + i * 0.11, x0: 320 + r() * 440, r0: (r() - 0.5) * 140,
+      x1: 405 + col * 90 + (row % 2) * 30 + (r() - 0.5) * 20, y1: 835 - row * 64 + (r() - 0.5) * 20, r1: (r() - 0.5) * 36,
+      g0: 3.05 + (11 - i) * 0.04,
     });
-  }
+  });
 }
-// ---------- confetti ----------
-const confLayer = $('confettiLayer');
 const CONF = [];
 {
-  const r = rng(42);
-  const cols = ['#2FA36B', '#FFC94D', '#FF7A6B', '#5FD49A', '#8FD3FF', '#FFB3B3', '#16352B'];
-  for (let i = 0; i < 110; i++) {
+  const r = rng(42), layer = $('confettiLayer');
+  const cols = ['#EC5F59', '#426844', '#BFE3CC', '#343434', '#F2C46B', '#BFD7F0', '#FFB5AC'];
+  for (let i = 0; i < 120; i++) {
     const el = document.createElement('div');
     el.className = 'abs confetti';
     el.style.background = cols[i % cols.length];
     if (i % 3 === 0) { el.style.width = '13px'; el.style.height = '13px'; el.style.borderRadius = '50%'; }
-    confLayer.appendChild(el);
-    const ang = (-90 + (r() - 0.5) * 150) * Math.PI / 180, sp = 700 + r() * 1100;
-    CONF.push({ el, t0: 15.25 + r() * 0.12, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, spin: (r() - 0.5) * 1400, sway: r() * 6 });
-  }
-}
-// ---------- sparkles & hearts ----------
-const SPARK = [];
-{
-  const r = rng(3), layer = $('sparkles');
-  for (let i = 0; i < 14; i++) {
-    const el = document.createElement('div');
-    el.className = 'abs';
-    el.style.cssText += 'width:22px;height:22px';
-    el.innerHTML = '<svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 0 Q13 9 22 11 Q13 13 11 22 Q9 13 0 11 Q9 9 11 0Z" fill="' + (i % 2 ? '#FFC94D' : '#5FD49A') + '"/></svg>';
     layer.appendChild(el);
-    SPARK.push({ el, x: 40 + r() * 1000, y: 40 + r() * 1000, ph: r() * 6.28, sp: 0.6 + r() });
+    const ang = (-90 + (r() - 0.5) * 160) * Math.PI / 180, sp = 800 + r() * 1100;
+    CONF.push({ el, t0: CELEB + r() * 0.1, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, spin: (r() - 0.5) * 1400, sway: r() * 6 });
   }
 }
-const HEARTS = [];
-{
-  const r = rng(11), layer = $('hearts');
-  for (let i = 0; i < 9; i++) {
-    const el = document.createElement('div');
-    el.className = 'abs heart';
-    el.textContent = ['💚', '✨', '💛'][i % 3];
-    layer.appendChild(el);
-    HEARTS.push({ el, t0: 17.6 + i * 0.32, x: i % 2 ? 300 + r() * 90 : 650 + r() * 70, drift: (r() - 0.5) * 60 });
-  }
-}
-const chips = [...document.querySelectorAll('.chip')];
-chips.forEach((c) => { c.innerHTML = '<span class="plus">+</span><span class="chk" style="display:none">✓</span>' + c.innerHTML; });
-
-// ---------- sound cue list (read by the renderer) ----------
 window.SFX = [
-  { t: 0.15, k: 'pop' }, { t: 0.55, k: 'pop2' }, { t: 1.95, k: 'pop2' },
-  ...PAPERS.map((p) => ({ t: p.t0 + 0.42, k: 'paper' })),
-  { t: 3.25, k: 'whoosh' }, { t: 3.5, k: 'sparkle' }, { t: 3.45, k: 'pop2' },
-  { t: 3.95, k: 'whoosh' }, { t: 4.55, k: 'boing' },
-  ...CLICKS.map((t) => ({ t, k: 'click' })),
-  ...CLICKS.slice(0, 5).map((t) => ({ t: t + 0.05, k: 'ding' })),
-  ...STEP_KEYS.slice(0, 3).map(([a]) => ({ t: a, k: 'swish' })),
-  ...[...WORD.slice(0, 4)].map((_, i) => ({ t: TYPE_START + i * TYPE_STEP, k: 'type' })),
-  ...Array.from({ length: 9 }, (_, i) => ({ t: SLIDE[0] + i * (SLIDE[1] - SLIDE[0]) / 9, k: 'tick' })),
-  { t: 13.7, k: 'swish' }, { t: 14.0, k: 'blip' }, { t: 14.3, k: 'blip' }, { t: 14.6, k: 'blip' },
-  { t: 15.05, k: 'chime' }, { t: 15.25, k: 'confetti' },
-  { t: 16.75, k: 'whoosh' }, { t: 17.3, k: 'boing' },
-  { t: 17.75, k: 'pop' }, { t: 18.05, k: 'pop2' }, { t: 18.35, k: 'pop2' }, { t: 18.65, k: 'sparkle' },
+  { t: 0.2, k: 'pop' }, { t: 0.5, k: 'pop2' }, { t: 0.75, k: 'pop2' }, { t: 1.55, k: 'pop2' },
+  ...PAPERS.map((p) => ({ t: p.t0 + 0.4, k: 'paper' })),
+  ...PAPERS.filter((_, i) => i % 3 === 0).map((p) => ({ t: p.g0 + 0.2, k: 'swish' })),
+  { t: 3.62, k: 'chomp' }, { t: 3.85, k: 'pop2' }, { t: 3.9, k: 'sparkle' },
+  { t: 4.45, k: 'whoosh' }, { t: 5.05, k: 'boing' },
+  ...TAP_LIST.map((t) => ({ t, k: 'click' })),
+  ...[TAPS.gl, TAPS.indoor, TAPS.wholesale, TAPS.state, TAPS.seg].map((t) => ({ t: t + 0.05, k: 'ding' })),
+  ...STEP_KEYS.slice(0, 2).map(([a]) => ({ t: a, k: 'swish' })),
+  ...[...SALES].map((_, i) => ({ t: SALES_T0 + i * SALES_DT, k: 'type' })),
+  { t: 13.85, k: 'blip' }, { t: 14.1, k: 'blip' }, { t: 14.35, k: 'blip' },
+  ...Array.from({ length: 12 }, (_, i) => ({ t: COUNT[0] + i * (COUNT[1] - COUNT[0]) / 12, k: 'tick' })),
+  { t: CELEB, k: 'chime' }, { t: CELEB + 0.05, k: 'confetti' }, { t: CELEB + 0.1, k: 'boing' },
+  { t: 18.0, k: 'whoosh' }, { t: 18.6, k: 'boing' },
+  { t: 18.55, k: 'pop' }, { t: 18.9, k: 'pop2' }, { t: 19.1, k: 'pop2' },
+  { t: 19.55, k: 'pop2' }, { t: 19.7, k: 'pop2' }, { t: 19.85, k: 'pop2' },
+  { t: 20.15, k: 'pop' }, { t: 20.3, k: 'sparkle' },
 ];
 window.DURATION = DURATION;
+window.STAGE = [W, H];
 
-// ---------- cursor path ----------
-const tileC = [SCR_L + 137, SCR_T + 195];
-const rowC = [SCR_L + 200, SCR_T + 226 + 40];
-const knob0 = [SCR_L + 20 + KNOB_FROM * 528, SCR_T + 326];
-const knob1 = [SCR_L + 20 + KNOB_TO * 528, SCR_T + 326];
-const chipC = [[SCR_L + 145, SCR_T + 155], [SCR_L + 437, SCR_T + 155], [SCR_L + 98, SCR_T + 241], [SCR_L + 390, SCR_T + 241]];
-const btnC = [SCR_L + 330, SCR_T + 452];
-const CUR = [
-  [4.6, 1000, 1150], [5.0, 760, 860], [5.75, tileC[0], tileC[1]], [6.2, tileC[0], tileC[1]], [6.9, 900, 720],
-  [8.05, 900, 720], [8.45, rowC[0], rowC[1]], [8.8, rowC[0], rowC[1]], [9.4, 880, 820],
-  [9.6, 880, 820], [9.95, knob0[0], knob0[1]], [SLIDE[0], knob0[0], knob0[1]], [SLIDE[1], knob1[0], knob1[1]], [11.3, 880, 760],
-  [11.75, ...chipC[0]], [11.9, ...chipC[0]], [12.15, ...chipC[1]], [12.25, ...chipC[1]], [12.5, ...chipC[2]], [12.6, ...chipC[2]],
-  [12.85, ...chipC[3]], [12.95, ...chipC[3]], [13.3, ...btnC], [13.7, ...btnC], [14.2, 1000, 1150],
-];
-function cursorAt(t) {
+// ---------------- measure tap targets once fonts/layout are ready ----------------
+let T = null;           // stage-space centres of tap targets
+let TAB_POS = null;     // [left, width] per tab
+let CUR = null;
+function init() {
+  if (T) return;
+  const stage = $('stage'), sr = stage.getBoundingClientRect(), k = sr.width / W;
+  place($('phone'), PHONE.x, PHONE.y);
+  for (let i = 0; i < 4; i++) $('s' + i).style.transform = 'none';
+  const c = (el, dx = 0) => { const r = el.getBoundingClientRect(); return [(r.left + r.width / 2 - sr.left) / k + dx, (r.top + r.height / 2 - sr.top) / k]; };
+  T = {
+    gl: c($('cardGL'), 60), indoor: c($('chipIndoor')), wholesale: c($('chipWholesale')),
+    state: c($('inpState'), -40), sales: c($('inpSales'), -40), seg: c($('seg35')), go: c($('goBtn')),
+  };
+  TAB_POS = [...document.querySelectorAll('.tab')].map((el) => [el.offsetLeft, el.offsetWidth]);
+  const rest1 = [780, 1060], rest2 = [770, 1120];
+  CUR = [
+    [5.2, 900, 1420], [5.8, 760, 1000], [6.2, ...T.gl], [6.45, ...T.gl], [7.2, ...rest1],
+    [8.4, ...rest1], [8.9, ...T.indoor], [9.1, ...T.indoor], [9.7, ...T.wholesale], [9.95, ...T.wholesale], [10.6, ...rest2],
+    [11.05, ...rest2], [11.45, ...T.state], [11.62, ...T.state], [11.88, ...T.sales], [12.1, ...T.sales], [12.55, ...rest2],
+    [12.95, ...T.seg], [13.15, ...T.seg], [13.5, ...T.go], [13.72, ...T.go], [14.3, 950, 1420],
+  ];
+}
+function touchAt(t) {
   if (t <= CUR[0][0]) return [CUR[0][1], CUR[0][2]];
   for (let i = 0; i < CUR.length - 1; i++) {
     const [a, x0, y0] = CUR[i], [b, x1, y1] = CUR[i + 1];
-    if (t <= b) { const k = inOut(P(t, a, b)); return [lerp(x0, x1, k), lerp(y0, y1, k)]; }
+    if (t <= b) { const q = inOut(P(t, a, b)); return [lerp(x0, x1, q), lerp(y0, y1, q)]; }
   }
   const l = CUR[CUR.length - 1]; return [l[1], l[2]];
 }
 
-function blinkK(t, period, off) { const m = (t + off) % period; return m < 0.13 ? 1 - Math.sin(Math.PI * m / 0.13) * 0.9 : 1; }
-
 // ================= render one frame =================
 function setTime(t) {
-  // background drift
-  place($('blob0'), 170 + Math.sin(t * 0.5) * 30, 190 + Math.cos(t * 0.4) * 25);
-  place($('blob1'), 930 + Math.cos(t * 0.45) * 30, 330 + Math.sin(t * 0.5) * 30);
-  place($('blob2'), 870 + Math.sin(t * 0.35) * 25, 960 + Math.cos(t * 0.5) * 20);
-  SPARK.forEach((s) => {
-    const k = 0.5 + 0.5 * Math.sin(t * s.sp * 2 + s.ph);
-    place(s.el, s.x, s.y + Math.sin(t + s.ph) * 10, { s: 0.4 + k * 0.8, r: t * 40 * s.sp, o: 0.25 + k * 0.5 });
-  });
+  init();
 
-  // ---- headlines
-  const H = [[$('h1'), 0.5, 1.95], [$('h2'), 1.95, 3.3], [$('h3'), 3.4, 4.35]];
-  H.forEach(([el, a, b], i) => {
-    const e = popEnv(t, a, b, 0.5, 0.25);
-    place(el, 540, 190 + (1 - e) * 20, { s: 0.6 + 0.4 * e, o: e > 0 ? Math.min(1, e * 1.5) : 0, r: i === 1 ? Math.sin(t * 9) * 1.2 * e : 0 });
-  });
+  // ---- scene 1 text
+  const kick = popEnv(t, 0.4, 4.5, 0.4, 0.3);
+  place($('kicker'), 540, 170, { o: clamp(kick * 1.4), s: 0.9 + 0.1 * kick });
+  const h1 = popEnv(t, 0.6, 4.5, 0.5, 0.3);
+  place($('hero1'), 540, 270, { s: 0.6 + 0.4 * h1, o: clamp(h1 * 1.5) });
+  const h2 = popEnv(t, 1.5, 3.7, 0.45, 0.2);
+  place($('hero2'), 540, 385, { s: 0.6 + 0.4 * h2, o: clamp(h2 * 1.5), r: Math.sin(t * 10) * 1.2 * h2 });
+  const h3 = popEnv(t, 3.75, 4.5, 0.4, 0.3);
+  place($('hero3'), 540, 385, { s: 0.6 + 0.4 * h3, o: clamp(h3 * 1.5) });
 
-  // ---- storefront
-  const store = $('store');
-  const worried = t > 2.2 && t < 3.45;
-  const happy = t >= 16.9;
-  let sx = 540, sy = 905, ss = 1.2, sr = 0, sq = 1;
-  if (t < 17) {
-    const pin = P(t, 0.1, 0.65);
-    ss = 1.2 * (t < 0.65 ? outBack(pin, 2.2) : 1);
-    // squash when papers land
-    PAPERS.forEach((p) => { sq -= bump(t, p.t0 + 0.4, 0.18, 0.035); });
-    if (worried) sr = Math.sin(t * 38) * 1.4;
-    if (t > 3.3 && t < 3.6) sq += bump(t, 3.3, 0.3, 0.06);
-    const out = inCubic(P(t, 3.9, 4.5));
-    sy += out * 800;
-  } else {
-    const back = outBack(P(t, 17.05, 17.65), 1.6);
-    sy = lerp(1500, 905, back); ss = 0.78;
-    sq = 1 + bump(t, 17.65, 0.3, 0.05) + bump(t, 19.3, 0.3, 0.04);
-    sr = Math.sin(t * 3) * 1.5;
-  }
-  place(store, sx, sy, { s: ss, sx: 1 / Math.sqrt(sq), sy: sq, r: sr, oy: 1, o: ss > 0.01 && sy < 1400 ? 1 : 0 });
-  const sBlink = blinkK(t, 2.9, 0.4);
-  $('sEyeL').setAttribute('transform', `translate(0 ${204 * (1 - sBlink)}) scale(1 ${sBlink})`);
-  $('sEyeR').setAttribute('transform', `translate(0 ${204 * (1 - sBlink)}) scale(1 ${sBlink})`);
-  show($('sEyesOpen'), !happy); show($('sEyesHappy'), happy);
-  show($('sBrows'), worried); show($('sSweat'), worried);
-  $('sSweat').setAttribute('transform', `translate(0 ${worried ? ((t * 60) % 18) : 0})`);
-  show($('sMouthWorry'), worried); show($('sMouthSmile'), !worried && !happy); show($('sMouthBig'), happy);
-  show($('sBlush'), !worried);
-
-  // ---- papers
+  // ---- papers: rain, pile, then get gobbled
   PAPERS.forEach((p) => {
-    if (t < p.t0) { place(p.el, 0, 0, { o: 0 }); return; }
-    let x, y, r;
-    const fall = P(t, p.t0, p.t0 + 0.42);
-    if (t < p.blow) {
-      const k = fall < 1 ? inCubic(fall) : 1;
-      x = lerp(p.x0, p.x1, outCubic(fall)); y = lerp(-140, p.y1, k); r = lerp(p.r0, p.r1, outCubic(fall));
-      if (fall >= 1) { y -= bump(t, p.t0 + 0.42, 0.2, 10); }
-      const drop = inCubic(P(t, 3.9, 4.5)) * 800; // ride along if still there
-      y += drop;
-    } else {
-      const d = t - p.blow;
-      x = p.x1 + p.bvx * d; y = p.y1 + p.bvy * d + 900 * d * d; r = p.r1 + p.bspin * d;
+    if (t < p.t0 || t > p.g0 + 0.45) { place(p.el, 0, 0, { o: 0 }); return; }
+    const f = P(t, p.t0, p.t0 + 0.4);
+    let x = lerp(p.x0, p.x1, outCubic(f)), y = lerp(-200, p.y1, inCubic(f)), r = lerp(p.r0, p.r1, outCubic(f)), s = 1;
+    if (f >= 1) y -= bump(t, p.t0 + 0.4, 0.2, 10);
+    if (t > 2.3 && t < p.g0) r += Math.sin(t * 16 + p.x1) * 2.5;   // wobbly tower
+    if (t >= p.g0) {
+      const g = inCubic(P(t, p.g0, p.g0 + 0.4));
+      x = lerp(x, 540, g); y = lerp(y, 1060, g) - Math.sin(Math.PI * g) * 80; r += g * 260; s = 1 - g * 0.85;
     }
-    place(p.el, x, y, { r, o: x > -200 ? 1 : 0 });
+    place(p.el, x, y, { r, s });
   });
 
-  // ---- card
-  const card = $('card');
-  let cy, cs = 1, cr = 0;
-  if (t < 16.6) {
-    const up = P(t, 3.95, 4.6);
-    cy = lerp(1600, CARD.y, outBack(up, 1.3));
-    cr = (1 - outCubic(up)) * 8;
-    cs = 1 + bump(t, 15.05, 0.35, 0.03);
+  // ---- folder mascot
+  const folder = $('folder');
+  const worried = t > 2.0 && t < 3.0;
+  const gobbling = t >= 3.0 && t < 3.65;
+  const happy = (t > 3.7 && t < 5.2) || t > CELEB;
+  let fx, fy, fs, fr = 0, sq = 1, look = [0, 0];
+  if (t < 4.4) {
+    const pin = P(t, 0.1, 0.7);
+    fx = FOLDER_HOME.x; fy = FOLDER_HOME.y; fs = FOLDER_HOME.s * (t < 0.7 ? outBack(pin, 2.2) : 1);
+    PAPERS.forEach((p) => { sq -= bump(t, p.t0 + 0.38, 0.18, 0.04); });
+    if (worried) fr = Math.sin(t * 40) * 1.5;
+    sq += bump(t, 3.62, 0.3, 0.09);
+    fy -= bump(t, 3.8, 0.45, 60);
+    look = worried ? [0, -4] : [0, 0];
+  } else if (t < 18.1) {
+    const j = inOut(P(t, 4.4, 5.05));
+    fx = lerp(FOLDER_HOME.x, FOLDER_PEEK.x, j); fy = lerp(FOLDER_HOME.y, FOLDER_PEEK.y, j) - Math.sin(Math.PI * j) * 180;
+    fs = lerp(FOLDER_HOME.s, FOLDER_PEEK.s, j); fr = j * 8;
+    if (j >= 1) {
+      fr = 8 + Math.sin(t * 2) * 2;
+      TAP_LIST.forEach((c) => { fy -= bump(t, c + 0.05, 0.3, 22); });
+      fy -= bump(t, CELEB, 0.5, 120) + bump(t, CELEB + 0.55, 0.4, 60);
+      fr += bump(t, CELEB, 0.5, -20);
+      const [tx, ty] = touchAt(t);
+      look = [clamp((tx - fx) / 60, -5, 6), clamp((ty - fy) / 80, -4, 4)];
+    }
   } else {
-    const dn = inCubic(P(t, 16.6, 17.1));
-    cy = lerp(CARD.y, 1700, dn); cr = dn * -10;
+    const j = inOut(P(t, 18.1, 18.8));
+    fx = lerp(FOLDER_PEEK.x, FOLDER_END.x, j); fy = lerp(FOLDER_PEEK.y, FOLDER_END.y, j) - Math.sin(Math.PI * j) * 260;
+    fs = lerp(FOLDER_PEEK.s, FOLDER_END.s, j); fr = lerp(8, 0, j) + (j < 1 ? j * 360 : 0);
+    if (j >= 1) { fr = Math.sin(t * 2.4) * 3; fy -= Math.abs(Math.sin((t - 18.8) * 4)) * 24 * Math.exp(-(t - 18.8) * 0.8); sq = 1 + bump(t, 18.8, 0.3, 0.06); }
   }
-  place(card, CARD.x, cy, { s: cs, r: cr, o: t > 3.9 && t < 17.2 ? 1 : 0 });
+  place(folder, fx, fy, { s: fs, r: fr, sx: 1 / Math.sqrt(sq), sy: sq, oy: 0.98 });
+  // front flap opens while gobbling
+  const open = gobbling ? Math.sin(Math.PI * P(t, 3.0, 3.65)) : 0;
+  $('fFront').setAttribute('transform', `translate(0 232) scale(1 ${(1 - open * 0.3).toFixed(3)}) translate(0 -232)`);
+  const blink = blinkK(t, 2.7, 0.5);
+  $('fEyes').setAttribute('transform', `translate(${look[0]} ${look[1]})`);
+  $('fEyeL').setAttribute('transform', `translate(0 ${148 * (1 - blink)}) scale(1 ${blink})`);
+  $('fEyeR').setAttribute('transform', `translate(0 ${148 * (1 - blink)}) scale(1 ${blink})`);
+  show($('fEyes'), !happy); show($('fEyesHappy'), happy);
+  show($('fBrows'), worried); show($('fSweat'), worried);
+  $('fSweat').setAttribute('transform', `translate(0 ${worried ? (t * 50) % 16 : 0})`);
+  show($('fMouthWorry'), worried); show($('fMouthO'), gobbling);
+  show($('fMouthBig'), happy && !gobbling); show($('fMouth'), !worried && !gobbling && !happy);
+  // indication card pops out of the folder on the end card
+  const cardUp = outBack(P(t, 18.9, 19.4), 2);
+  $('fCard').setAttribute('transform', `translate(0 ${(1 - cardUp) * 90})`);
+  $('fCard').style.opacity = t > 18.85 ? 1 : 0;
 
-  // step position (continuous)
+  // ---- phone
+  const phone = $('phone');
+  let py;
+  if (t < 18) py = lerp(1900, PHONE.y, outBack(P(t, 4.45, 5.1), 1.2));
+  else py = lerp(PHONE.y, 2000, inCubic(P(t, 18.0, 18.5)));
+  const pr = t < 18 ? (1 - outCubic(P(t, 4.45, 5.1))) * 6 : P(t, 18, 18.5) * -8;
+  place(phone, PHONE.x, py, { r: pr, s: 1 + bump(t, CELEB, 0.35, 0.02), o: t > 4.4 && t < 18.6 ? 1 : 0 });
+  place($('illus'), 540, py + 522, { o: t > 5.1 && t < 18 ? 0.9 : 0 });
+
   let step = 0;
   STEP_KEYS.forEach(([a, b]) => { step += inOut(P(t, a, b)); });
-  for (let i = 0; i < 6; i++) {
-    const el = $('scr' + i);
-    const dx = (i - step) * 620;
-    el.style.transform = `translateX(${dx.toFixed(1)}px)`;
-    el.style.visibility = Math.abs(i - step) < 1.2 ? 'visible' : 'hidden';
+  for (let i = 0; i < 4; i++) {
+    const el = $('s' + i);
+    el.style.transform = `translateX(${((i - step) * 528).toFixed(1)}px)`;
+    el.style.visibility = Math.abs(i - step) < 1.1 ? 'visible' : 'hidden';
   }
-  document.querySelectorAll('#progress b').forEach((b, k) => { b.style.width = (clamp(step - k) * 100).toFixed(1) + '%'; });
-  $('stepLabel').textContent = step < 3.5 ? `Step ${Math.min(4, Math.round(step) + 1)} of 4` : (step < 4.5 ? 'Almost there…' : 'All done!');
+  const ai = Math.round(step);
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('on', i === ai));
+  const s0 = Math.floor(step), s1 = Math.min(3, s0 + 1), fr2 = step - s0;
+  $('tabBar').style.left = lerp(TAB_POS[s0][0], TAB_POS[s1][0], fr2).toFixed(1) + 'px';
+  $('tabBar').style.width = lerp(TAB_POS[s0][1], TAB_POS[s1][1], fr2).toFixed(1) + 'px';
 
-  // screen 0: tile select
-  const tile = $('tile0'), tsel = t >= CLICKS[0];
-  tile.style.borderColor = tsel ? 'var(--green)' : 'var(--line)';
-  tile.style.background = tsel ? 'var(--mint-lt)' : '#fff';
-  tile.style.transform = `scale(${(1 - bump(t, CLICKS[0], 0.25, 0.06) + (t > 5.5 && t < CLICKS[0] ? 0.03 : 0)).toFixed(3)})`;
-  const tchk = tile.querySelector('.chk');
-  const tk = outBack(P(t, CLICKS[0], CLICKS[0] + 0.3), 2.5);
-  tchk.style.transform = `scale(${tk})`; tchk.style.opacity = tsel ? 1 : 0;
+  // step 1: pick General Liability
+  const gl = $('cardGL'), glOn = t >= TAPS.gl;
+  gl.style.borderColor = glOn ? 'var(--green)' : 'var(--line)';
+  gl.style.background = glOn ? 'var(--green-lt)' : '#fff';
+  gl.style.transform = `scale(${(1 - bump(t, TAPS.gl, 0.22, 0.03)).toFixed(3)})`;
+  const ck = gl.querySelector('.ck'); ck.style.opacity = glOn ? 1 : 0; ck.style.transform = `scale(${outBack(P(t, TAPS.gl, TAPS.gl + 0.3), 2.5)})`;
 
-  // screen 1: typing
-  const nTyped = t < TYPE_START ? 0 : Math.min(4, Math.floor((t - TYPE_START) / TYPE_STEP) + 1);
-  const picked = t >= CLICKS[1] + 0.05;
-  $('typed').textContent = picked ? WORD : WORD.slice(0, nTyped);
-  $('ph').style.display = nTyped === 0 && !picked ? '' : 'none';
-  $('caret').style.opacity = !picked && Math.floor(t * 3) % 2 === 0 ? 1 : 0;
-  $('field').style.borderColor = t > 7.1 ? 'var(--green)' : 'var(--line)';
-  const fchk = $('fieldChk'); fchk.style.opacity = picked ? 1 : 0; fchk.style.transform = `scale(${outBack(P(t, CLICKS[1], CLICKS[1] + 0.3), 2.5)})`;
-  const ddk = t < 8.0 ? 0 : (picked ? 1 - P(t, CLICKS[1] + 0.05, CLICKS[1] + 0.2) : outCubic(P(t, 8.0, 8.2)));
-  const dd = $('dropdown'); dd.style.opacity = ddk; dd.style.transform = `translateY(${(1 - ddk) * -12}px)`;
-  $('ddRow').style.background = t > 8.35 ? 'var(--mint-lt)' : '#fff';
-
-  // screen 2: slider
-  const kf = lerp(KNOB_FROM, KNOB_TO, inOut(P(t, SLIDE[0], SLIDE[1])));
-  $('trackFill').style.width = (kf * 100).toFixed(2) + '%';
-  const knob = $('knob');
-  const grab = t > 9.95 && t < SLIDE[1] + 0.1;
-  place(knob, 20 + kf * 528, 326, { s: grab ? 1.15 : 1 });
-  $('bigval').textContent = '$' + (kf * 5).toFixed(1) + 'M';
-  $('bigval').style.transform = `scale(${1 + (grab ? Math.abs(Math.sin(t * 20)) * 0.03 : 0)})`;
-
-  // screen 3: chips + button
-  chips.forEach((c, i) => {
-    const on = i < 4 && t >= CHIP_CLICK[i];
-    c.style.borderColor = on ? 'var(--green)' : 'var(--line)';
-    c.style.background = on ? 'var(--mint-lt)' : '#fff';
-    c.style.color = on ? 'var(--green-dk)' : 'var(--ink)';
-    c.querySelector('.plus').style.display = on ? 'none' : '';
-    const ck = c.querySelector('.chk'); ck.style.display = on ? 'flex' : 'none';
-    ck.style.transform = on ? `scale(${outBack(P(t, CHIP_CLICK[i], CHIP_CLICK[i] + 0.25), 2.5)})` : '';
-    c.style.transform = i < 4 ? `scale(${(1 - bump(t, CHIP_CLICK[i], 0.22, 0.08)).toFixed(3)})` : '';
-  });
-  const btn = $('goBtn'), bp = t >= CLICKS[6] && t < CLICKS[6] + 0.18;
-  btn.style.transform = `translateY(${bp ? 6 : 0}px) scale(${1 + (t > 13.0 && t < CLICKS[6] ? Math.sin(t * 14) * 0.015 : 0)})`;
-  btn.style.boxShadow = bp ? '0 1px 0 var(--green-dk)' : '0 7px 0 var(--green-dk)';
-  btn.style.opacity = t > 12.9 ? 1 : 0.45;
-
-  // screen 4: loading
-  $('spinArc').setAttribute('stroke-dashoffset', (-t * 520).toFixed(1));
-  document.querySelectorAll('#dots i').forEach((d, i) => {
-    d.style.transform = `translateY(${(-Math.max(0, Math.sin(t * 9 - i * 0.9)) * 22).toFixed(1)}px)`;
+  // step 2: chips
+  [['chipIndoor', TAPS.indoor], ['chipWholesale', TAPS.wholesale]].forEach(([id, tt]) => {
+    const el = $(id); el.classList.toggle('on', t >= tt);
+    el.style.transform = `scale(${(1 - bump(t, tt, 0.22, 0.07)).toFixed(3)})`;
   });
 
-  // screen 5: result
-  const rc = outCubic(P(t, 15.05, 15.5));
-  $('resCircle').setAttribute('stroke-dashoffset', (402 * (1 - rc)).toFixed(1));
-  $('resTick').setAttribute('stroke-dashoffset', (90 * (1 - outCubic(P(t, 15.35, 15.65)))).toFixed(1));
-  const rt = $('resTitle'); const rtk = outBack(P(t, 15.3, 15.75), 2);
-  rt.style.transform = `scale(${0.6 + 0.4 * rtk})`; rt.style.opacity = clamp(rtk * 2);
-  document.querySelectorAll('.resrow').forEach((row, i) => {
-    const k = outBack(P(t, 15.6 + i * 0.14, 15.95 + i * 0.14), 1.6);
-    row.style.opacity = clamp(k * 1.5); row.style.transform = `translateX(${(1 - k) * 60}px)`;
+  // step 3: fields
+  const stOn = t >= TAPS.state + 0.05;
+  $('statePh').style.display = stOn ? 'none' : ''; $('stateVal').style.display = stOn ? '' : 'none';
+  $('inpState').classList.toggle('on', t > TAPS.state && t < TAPS.sales);
+  const nSales = t < SALES_T0 ? 0 : Math.min(SALES.length, Math.floor((t - SALES_T0) / SALES_DT) + 1);
+  $('salesVal').textContent = SALES.slice(0, nSales);
+  $('salesPh').style.display = nSales ? 'none' : '';
+  const salesFocus = t > TAPS.sales && t < TAPS.seg;
+  $('inpSales').classList.toggle('on', salesFocus);
+  $('caret').style.opacity = salesFocus && Math.floor(t * 3) % 2 === 0 ? 1 : 0;
+  $('seg35').classList.toggle('on', t >= TAPS.seg);
+  const go = $('goBtn'), gp = t >= TAPS.go && t < TAPS.go + 0.18;
+  go.style.transform = `scale(${(gp ? 0.96 : 1) + (t > 13.2 && t < TAPS.go ? Math.sin(t * 14) * 0.012 : 0)})`;
+
+  // loading overlay
+  const lo = t < LOAD[0] || t > LOAD[1] ? 0 : Math.min(P(t, LOAD[0], LOAD[0] + 0.12), 1 - P(t, LOAD[1] - 0.15, LOAD[1]));
+  $('loading').style.opacity = lo; $('loading').style.display = lo > 0 ? 'flex' : 'none';
+  $('spinArc').setAttribute('transform', `rotate(${(t * 360) % 360} 60 60)`);
+
+  // step 4: indication
+  const cnt = outCubic(P(t, COUNT[0], COUNT[1]));
+  const price = $('price'); price.textContent = money(1511 * cnt);
+  price.style.transform = `scale(${1 + bump(t, CELEB, 0.3, 0.1)})`;
+  document.querySelectorAll('.row').forEach((row, i) => {
+    const k = outBack(P(t, 15.75 + i * 0.12, 16.1 + i * 0.12), 1.6);
+    row.style.opacity = clamp(k * 1.5); row.style.transform = `translateX(${(1 - k) * 40}px)`;
   });
-  $('foot').textContent = step > 4.5 ? '🌿 A CARMA specialist will help you finalize' : '🌿 Cannabis insurance specialists';
 
-  // ---- mascot
-  const m = $('mascot');
-  let mx, my, mr = 0, ms = 1, mo = 1, mHappy = false, mOpen = false;
-  const hover = Math.sin(t * 4) * 6;
-  if (t < 3.2) { mo = 0; mx = 1300; my = 400; }
-  else if (t < 3.95) {
-    const k = outBack(P(t, 3.2, 3.6), 1.4);
-    mx = lerp(1300, 900, k); my = lerp(380, 700, k) + hover; mr = (1 - k) * -40 + Math.sin(t * 6) * 4;
-    mOpen = t < 3.9; mHappy = t > 3.5;
-  } else if (t < 16.65) {
-    const j = P(t, 3.95, 4.55);
-    if (j < 1) {
-      mx = lerp(900, PERCH.x, inOut(j)); my = lerp(700, PERCH.y, inOut(j)) - Math.sin(Math.PI * j) * 260; mr = j * 360;
-    } else {
-      mx = PERCH.x; my = PERCH.y + Math.sin(t * 3) * 3;
-      CLICKS.forEach((c) => { my -= bump(t, c + 0.05, 0.35, 26); });
-      mr = Math.sin(t * 2.2) * 3;
-      // peek toward the cursor
-      const [cx] = cursorAt(t); mr += clamp((cx - PERCH.x) / 30, -8, 8);
-      // loading: big hop & spin
-      if (t > 13.75 && t < 15.0) { const lj = P(t, 13.8, 14.6); my -= Math.sin(Math.PI * lj) * 95; mr = inOut(lj) * -360; }
-      if (t > 15.05) { my -= bump(t, 15.05, 0.45, 60) + bump(t, 15.55, 0.4, 40); mHappy = true; }
-    }
-    mOpen = (t > 15.05 && t < 16.2);
-  } else {
-    const j = P(t, 16.65, 17.35);
-    mx = lerp(PERCH.x, 860, inOut(j)); my = lerp(PERCH.y, 850, inOut(j)) - Math.sin(Math.PI * j) * 200; mr = j * 360;
-    if (j >= 1) { my = 850 - Math.abs(Math.sin((t - 17.35) * 5)) * 40 * Math.exp(-(t - 17.35) * 0.6); mr = Math.sin(t * 5) * 10; }
-    mHappy = true; mOpen = t > 17.35;
-  }
-  // blink
-  const mb = blinkK(t, 2.4, 1.1);
-  $('mEyeL').setAttribute('transform', `translate(0 ${98 * (1 - mb)}) scale(1 ${mb})`);
-  $('mEyeR').setAttribute('transform', `translate(0 ${98 * (1 - mb)}) scale(1 ${mb})`);
-  show($('mEyesOpen'), !mHappy); show($('mEyesHappy'), mHappy);
-  show($('mMouth'), !mOpen); show($('mMouthOpen'), mOpen);
-  place(m, mx, my, { r: mr, s: ms, o: mo });
-  // hands over the card while perched
-  const perched = t > 4.55 && t < 16.65 && !(t > 13.75 && t < 14.7);
-  place($('hands'), PERCH.x, cy - 390 + 4, { o: perched ? 1 : 0, s: perched ? 1 : 0.2 });
+  // ---- step captions
+  CAPS.forEach(([a, b], i) => {
+    const e = t < a || t > b ? 0 : Math.min(outCubic(P(t, a, a + 0.45)), 1 - inCubic(P(t, b - 0.25, b)));
+    place($('cap' + i), 540, 165 + (1 - e) * 24, { o: e });
+  });
 
-  // ---- cursor
-  const [cxp, cyp] = cursorAt(t);
-  const pressed = CLICKS.some((c) => t >= c - 0.06 && t < c + 0.1) || (t > SLIDE[0] - 0.05 && t < SLIDE[1]);
-  place($('cursor'), cxp, cyp, { ox: 0.12, oy: 0.07, s: pressed ? 0.85 : 1, o: t > 4.6 && t < 14.2 ? 1 : 0, r: -4 });
+  // ---- timer chip (the "3 minutes or less" promise)
+  const tm = clamp((t - 5.1) / (CELEB - 5.1)) * 167;
+  $('timerV').textContent = `${Math.floor(tm / 60)}:${String(Math.floor(tm % 60)).padStart(2, '0')}`;
+  const tIn = outBack(P(t, 5.2, 5.6), 2);
+  place($('timer'), 945, 470, { s: tIn * (1 + bump(t, CELEB, 0.35, 0.15)), o: t > 5.2 && t < 18 ? 1 - P(t, 17.8, 18) : 0, r: 4 + Math.sin(t * 2) * 1.5 });
+  const done = t >= CELEB, tic = $('timer').querySelector('.ic');
+  $('timer').style.borderColor = done ? 'var(--check)' : 'var(--line)';
+  tic.style.background = done ? 'var(--mint)' : 'var(--coral-lt)';
+  tic.style.color = done ? 'var(--check)' : 'var(--coral)';
+  tic.textContent = done ? '✓' : '⚡';
+
+  // ---- touch indicator
+  const [tx, ty] = touchAt(t);
+  const pressed = TAP_LIST.some((c) => t >= c - 0.07 && t < c + 0.12);
+  place($('touch'), tx, ty, { s: pressed ? 0.78 : 1, o: t > 5.2 && t < 14.3 ? 1 : 0 });
   let rip = null;
-  CLICKS.forEach((c) => { if (t >= c && t < c + 0.4) rip = c; });
-  if (rip !== null) { const k = P(t, rip, rip + 0.4); const [rx, ry] = cursorAt(rip); place($('ripple'), rx + 4, ry + 4, { s: 0.3 + k * 0.9, o: 1 - k }); }
+  TAP_LIST.forEach((c) => { if (t >= c && t < c + 0.45) rip = c; });
+  if (rip !== null) { const q = P(t, rip, rip + 0.45); const [rx, ry] = touchAt(rip); place($('ripple'), rx, ry, { s: 0.35 + q, o: 1 - q }); }
   else place($('ripple'), 0, 0, { o: 0 });
 
   // ---- confetti
   CONF.forEach((c) => {
     const d = t - c.t0;
-    if (d < 0 || d > 2.4) { place(c.el, 0, 0, { o: 0 }); return; }
+    if (d < 0 || d > 2.5) { place(c.el, 0, 0, { o: 0 }); return; }
     const x = 540 + c.vx * d * Math.exp(-d * 0.9) + Math.sin(d * 6 + c.sway) * 20;
-    const y = 330 + c.vy * d * Math.exp(-d * 0.9) + 520 * d * d;
-    place(c.el, x, y, { r: c.spin * d, o: 1 - P(d, 1.8, 2.4), sy: Math.cos(d * 9 + c.sway) });
+    const y = 640 + c.vy * d * Math.exp(-d * 0.9) + 560 * d * d;
+    place(c.el, x, y, { r: c.spin * d, o: 1 - P(d, 1.9, 2.5), sy: Math.cos(d * 9 + c.sway) });
   });
 
   // ---- end card
-  const ew = outBack(P(t, 17.7, 18.2), 2);
-  place($('endWord'), 540, 150, { s: 0.5 + 0.5 * ew, o: clamp(ew * 2), r: (1 - ew) * -6 });
-  const ep = outElastic(P(t, 18.0, 18.9));
-  place($('endPill'), 540, 262, { s: ep, o: t > 18 ? 1 : 0, r: -3 + Math.sin(t * 2.5) * 1.5 });
-  const et = outCubic(P(t, 18.3, 18.8));
-  place($('endTag'), 540, 385 + (1 - et) * 30, { o: et });
-  const eu = outBack(P(t, 18.6, 19.05), 2.2);
-  place($('endUrl'), 540, 500, { s: eu, o: clamp(eu * 2) });
-  place($('endFine'), 540, 1045, { o: P(t, 19.0, 19.5) * 0.9 });
-  HEARTS.forEach((h) => {
-    const d = t - h.t0;
-    if (d < 0 || d > 2.2) { place(h.el, 0, 0, { o: 0 }); return; }
-    place(h.el, h.x + Math.sin(d * 3) * 18 + h.drift * d * 0.3, 860 - d * 110, { s: outBack(P(d, 0, 0.3)), o: 1 - P(d, 1.5, 2.2) });
+  const pop = (a, d = 0.45, s = 2) => outBack(P(t, a, a + d), s);
+  const eL = pop(18.5); place($('endLogo'), 540, 125, { s: 0.6 + 0.4 * eL, o: clamp(eL * 2) });
+  place($('endKicker'), 540, 245, { o: outCubic(P(t, 18.75, 19.1)) });
+  const e1 = pop(18.9, 0.45, 1.6); place($('endH1'), 540, 330 + (1 - e1) * 30, { o: clamp(e1 * 2) });
+  const e2 = pop(19.1, 0.45, 1.6); place($('endH2'), 540, 420 + (1 - e2) * 30, { o: clamp(e2 * 2) });
+  place($('endSub'), 540, 510, { o: outCubic(P(t, 19.35, 19.8)) });
+  [[0, 190, 700, 19.55, -3], [1, 880, 800, 19.7, 3], [2, 200, 930, 19.85, -2]].forEach(([i, x, y, a, r]) => {
+    const e = pop(a, 0.5, 2.2);
+    place($('feat' + i), x, y + Math.sin(t * 2 + i) * 5, { s: e, o: clamp(e * 2), r });
   });
+  const ec = pop(20.15, 0.5, 2.2);
+  place($('endCta'), 540, 1115, { s: ec * (1 + (t > 20.8 ? Math.sin((t - 20.8) * 5) * 0.02 : 0)), o: clamp(ec * 2) });
+  place($('endUrl'), 540, 1210, { o: outCubic(P(t, 20.4, 20.8)) });
+  place($('endFine'), 540, 1295, { o: outCubic(P(t, 20.6, 21.0)) * 0.95 });
 }
 window.setTime = setTime;
 
-// ---------- live playback (skipped when rendering) ----------
+// ---------------- live playback ----------------
 const params = new URLSearchParams(location.search);
-function fit() {
-  const s = Math.min(innerWidth / 1080, innerHeight / 1080);
-  $('stage').style.transform = `scale(${s})`;
-}
+function fit() { $('stage').style.transform = `scale(${Math.min(innerWidth / W, innerHeight / H)})`; }
 if (!params.has('render')) {
   document.body.classList.add('live');
-  fit(); addEventListener('resize', fit);
   let start = null;
   document.fonts.ready.then(() => {
-    const loop = (now) => {
-      if (start === null) start = now;
-      const t = ((now - start) / 1000) % DURATION;
-      setTime(t);
-      requestAnimationFrame(loop);
-    };
+    init(); fit(); addEventListener('resize', fit);
+    const loop = (now) => { if (start === null) start = now; setTime(((now - start) / 1000) % DURATION); requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   });
   $('replay').onclick = () => { start = null; };
-} else {
-  setTime(0);
 }
 </script>
 </body>

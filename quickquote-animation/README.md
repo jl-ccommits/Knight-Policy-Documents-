@@ -1,8 +1,14 @@
 # CARMA QuickQuote animation
 
-A 21-second, 1080×1080 cartoon promo for QuickQuote: a stressed dispensary
-gets buried in insurance paperwork, a shield mascot shows up, the four-step
-QuickQuote flow plays out, and it ends on the CARMA / carma365.com/quote card.
+A 23.5-second, 4:5 (1080×1350) promo for QuickQuote, aimed at retail insurance
+agents. A coral folder mascot (from the QuickQuote ad) gets buried in cannabis
+submission paperwork, gobbles it up, then watches an agent run the real four-step
+flow (Coverage → Eligibility → Rate → Indication) to a $1,511 non-binding
+indication. It ends on the "Cannabis account? Get QuickQuote access." card.
+
+The phone UI mirrors carma365.com's QuickQuote demo screens: copy, coverage cards,
+risk-type chips, and the indication breakdown. The Rate step is illustrative,
+because its real fields weren't in the reference screenshots.
 
 - `quickquote.mp4`: the finished video, with sound.
 - `index.html`: the animation. Open it in a browser to watch it play live.
@@ -24,6 +30,7 @@ Stills for quick checks: `node render.mjs --stills 3.5,6,15.8`
 
 ## Brand swap
 
-Colors are CSS variables at the top of `index.html` (`--ink`, `--green`, …).
-The "CARMA" wordmark is plain text in `.wordmark` / `#endWord`. Drop in the
-real logo SVG there.
+Colors are CSS variables at the top of `index.html`, sampled from the site:
+coral `#EC5F59`, forest green `#426844`, ink `#232833`. The CARMA insurance logo
+is a type recreation (`.logo`: Montserrat plus Playfair plus a coral slash). Swap
+in the real SVG for a pixel-exact mark.
