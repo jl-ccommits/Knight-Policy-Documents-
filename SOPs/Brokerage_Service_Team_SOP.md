@@ -27,7 +27,7 @@ Matthew owns the outcome of every brokerage file. Today each carrier quote waits
 | Summer Jenkins-Wilson | Producer, brokerage oversight | Bringing in agents and business, carrier and wholesaler relationships, appointments. Hands new business to the inbox. Decides only the items in the Oversight section. | Build proposals, send quotes, chase bind requests. |
 | Jacob Landman | Executive sponsor | Mailbox and C360 access, tools, weekly review, escalations Summer can't resolve. | Day-to-day file work. |
 
-Other referral sources (Carma underwriting, Bryan, carriers) send brokerage work to the brokerage inbox, not to a person's Teams or inbox.
+Other referral sources (Carma underwriting, Bryan, carriers) send brokerage work to the brokerage inbox, not to a person's Teams or inbox. Accounting (premium@, ap@ and Advance) moves premium and commission money, but Matthew owns every agent question about it until the agent has an answer.
 
 ## Intake: one door for everything
 
@@ -39,9 +39,18 @@ All brokerage work enters and leaves through brokerage@carma365.com. If a file i
 
 1. Agents, carriers and wholesalers send to brokerage@carma365.com. Summer already points new contacts there (IMA, 9/14); keep doing that.
 2. Anything Summer, Carma underwriting or Bryan receives directly gets forwarded to the brokerage inbox the same day, with the handoff note below. No work is assigned through Teams DMs or texts.
-3. All replies to agents and carriers go out from the brokerage inbox, never a personal inbox, so the thread stays visible to the whole team.
+3. All replies to agents and carriers go out from the brokerage inbox, never a personal inbox, so the thread stays visible to the whole team. Brokerage files also stay out of service@carma365.com; if one lands there, as the Ethos flood request did on 9/21, move it to the brokerage inbox.
 4. Every email and document is saved to the account in C360 and to Brokerage > New Business > the Named Insured folder. Nothing is saved to a desktop.
 5. If C360 errors out (as it did on 9/23), log the item in the NB Log and back-fill C360 the same day it recovers.
+
+**Which mailbox**
+
+| Mailbox | Use for |
+| --- | --- |
+| brokerage@ | Every brokerage file: submissions, quotes, binds, subjectivities, endorsements, renewals. New business no longer goes to sales@ (Summer, 9/10). |
+| premium@ | Premium invoices, payments and remittance. Copy brokerage@ so the file stays complete. |
+| ap@ | Commission payouts to agents. Copy brokerage@. |
+| service@ | Not used for brokerage files. Anything brokerage that lands here moves to brokerage@. |
 
 **Handoff note (Summer to the brokerage inbox)**
 
@@ -105,17 +114,40 @@ The left branch loops until the file is complete; nothing goes to market with mi
 
 **Service requests** (endorsements, cancellations, audits, loss runs) follow the same inbox rules: acknowledge the same day, submit to the carrier within 1 business day, and confirm back to the agent when the carrier responds.
 
+**Renewals** start 90 days before expiration, not when the agent asks. On the Ethos workers' comp renewal (10/31), the agent flagged the 90-day window on 8/7 and still had no clean submission on 9/22.
+
+1. 90 days out: ask the agent for the current application, ACORDs, currently valued loss runs and a signed loss-run authorization. Send a summary of current coverage with it.
+2. 60 days out: send the renewal to markets.
+3. 30 days out: send the renewal proposal to the agent.
+4. 15 days out with no bind request: Matthew calls the agent and tells Summer.
+
+**Rules from this month's misses** (Summer's emails, 8/15 to 9/23)
+
+- **Tell every market it's cannabis.** Every market must confirm it knows the insured is a cannabis business before any quote goes to the agent or client. Check that locations and limits match the SOV. The Ethos flood indication came back with three different property limits and led with NFIP, which does not insure cannabis risks.
+- **Send subjectivities the day they arrive.** Send them to the carrier within 1 business day and track each one to its due date as a C360 task. The Mederi Express subjectivities arrived 9/14 and still hadn't gone to BIK by 9/23, with a 9/30 deadline.
+- **Act on carrier warnings the same day.** A cancellation notice, non-pay notice or payment-draft warning gets a reply and a call to the agent that day, and Summer is told. Ethos had a $42K installment drafted after two unanswered warnings (8/12 and 8/21).
+- **Follow the money to the carrier.** Confirm the agent's payment arrived and went to the carrier before the due date. SRCX (Conifer) and Plumber's Investors both cancelled after the agent had paid or mailed payment.
+- **Know the billing type at bind.** Agency bill: invoice the agent net of commission, with remittance by policy. Direct bill: the carrier bills the insured and Carma only receives commission, so enter it in Advance and tell the agent how commission is paid. Refunds show the transaction type and a negative amount. The Times Sq Culture agent chased a June commission eight times, and Bud Bros was told direct bill when it wasn't.
+- **Get client instructions in writing.** Add or change coverage only on the client's written instruction. Then confirm the carrier issued the endorsement and send it to the client.
+
 ## Timelines
 
-The team is measured on these deadlines. Three come from Summer's Brokerage SOP; the rest are proposed to fill gaps and need her sign-off.
+The team is measured on these deadlines. Three come from Summer's Brokerage SOP and three from her emails; the rest are proposed to fill gaps and need her sign-off.
 
 | Event | Deadline | Owner | Source |
 | --- | --- | --- | --- |
+| Carrier cancellation, non-pay or payment-draft notice | Reply and call the agent the same day, and tell Summer | Matthew | Summer's emails |
 | Bind request received | Confirmed to agent and bind order to carrier the same business day | Matthew | Proposed |
 | Carrier binder received | Binder and invoice to agent within 1 business day | Matthew | Proposed |
+| Subjectivities received from agent | Sent to carrier within 1 business day, tracked to the carrier's due date | Kheluram | Proposed |
+| Premium received from agent | Paid to the carrier before its due date, with remittance by policy | Matthew with premium@ | Proposed |
+| Agent asks about the same item a second time | Matthew calls the agent that day instead of emailing again | Matthew | Summer, 9/23 |
 | Carrier quote or decline received | Logged in C360 the same day | Kheluram | Summer's SOP |
 | Carrier quote received | Retail proposal to agent within 1 business day | Kheluram builds, Matthew releases | Summer's SOP |
 | Proposal sent, no bind request yet | Follow up with agent every 3 business days | Kheluram | Summer's SOP |
+| Renewal 90 days out | Renewal request and coverage summary to the agent | Kheluram | Summer's emails |
+| Renewal 60 days out | Renewal sent to markets | Matthew | Proposed |
+| Renewal 30 days out | Renewal proposal to the agent | Kheluram builds, Matthew releases | Proposed |
 | New submission received | Acknowledged and logged the same business day | Kheluram | Proposed |
 | Submission incomplete | One missing-items email the same business day | Kheluram | Proposed |
 | Submission complete | Sent to markets within 1 business day | Matthew | Proposed |
@@ -124,7 +156,7 @@ The team is measured on these deadlines. Three come from Summer's Brokerage SOP;
 | Policy received from carrier | Checked against quote and delivered within 2 business days | Matthew | Proposed |
 | Effective date within 5 business days | Rush: moves to the top of the queue, Matthew handles | Matthew | Proposed |
 
-Bind requests and rush files always come first. A missed deadline is flagged before it passes, per the Oversight section, not after.
+Carrier warnings, bind requests and rush files always come first. A missed deadline is flagged before it passes, per the Oversight section, not after.
 
 ## Summer's oversight
 
@@ -144,6 +176,7 @@ Summer approves only the items below. Everything else Matthew decides and releas
 - An admin fee below the band minimum.
 - E&S business in a state flagged in the SLA Clearance Tool.
 - Carrier contact details, carrier tax lines or total commission on a retail proposal.
+- Releasing a quote before the market has confirmed it knows the risk is cannabis.
 
 **Escalation**
 
@@ -167,7 +200,7 @@ The team is held to one daily report and one weekly review. The scorecard below 
 
 | When | Who | What |
 | --- | --- | --- |
-| Start of day | Matthew | Triage the brokerage inbox: bind requests and rush files first, then quotes received, then new submissions. Every new email is assigned to Matthew or Kheluram. |
+| Start of day | Matthew | Triage the brokerage inbox: carrier warnings, bind requests and rush files first, then quotes received, then new submissions. Every new email is assigned to Matthew or Kheluram. |
 | Kheluram's shift | Kheluram | Work his queue in the order above, from the NB Log follow-up dates. |
 | End of day | Matthew | Every open file has a C360 status and a follow-up date. Send the end-of-day email below. |
 
@@ -203,10 +236,15 @@ The backlog gets cleared before anything else, including new tools. That is Summ
 - [ ] Give Matthew and Kheluram full access to the brokerage inbox. Jacob, Sep 24, 2026
 - [ ] Work every bind order open since 9/18, oldest first, and confirm each one to the agent. Matthew, Sep 24, 2026
 - [ ] Release the quote that has been ready since 9/18. Matthew, Sep 24, 2026
-- [ ] Finish the Ethos flood quotes for Jodi through Wholesure. They were due 9/23. Kheluram with Summer, Sep 24, 2026
+- [ ] Mederi Express: send the title receipt and plate numbers to BIK, confirm the receipt is acceptable in place of titles, and request the policy. Subjectivities are due 9/30. Matthew, Sep 24, 2026
+- [ ] Times Sq Culture: call Jennifer Lazo at NY Capital, apologize, and stay on it until her June commission is paid. Matthew, Sep 24, 2026. Jacob decides on paying it while accounting traces the funds.
+- [ ] Ethos flood: get firm Neptune and NFIP quotes with cannabis confirmed, then send the formal quote to Jodie. Summer sent the indication 9/23 and is holding the formal quote. Kheluram with Summer, Sep 24, 2026
+- [ ] Ethos workers' comp renewal (10/31): send Gene at Flux a clean ACORD 130 and the corrected class-code spreadsheet he asked for on 9/22. Matthew, Sep 25, 2026
 - [ ] Confirm the two rush submissions to Blitz and LIO (Summer, 9/22) went out. Kheluram, Sep 24, 2026
 - [ ] Send a bind follow-up on each of the 35 quoted files. Kheluram, Sep 25, 2026
+- [ ] Check every bound file for open subjectivities, unpaid premium and unissued endorsements. Log each with its due date. Kheluram, Sep 28, 2026
 - [ ] Chase every market on the 30 Follow Up files that hasn't answered in 3 business days. Kheluram, Sep 28, 2026
+- [ ] Confirm the RPS appointment is active again; RPS reported the agency suspended while the MLH Kinsale change was open. Summer, Sep 28, 2026
 - [ ] Review the 43 New Business files: marketed, waiting on info, or closed. Matthew, Sep 30, 2026
 
 **Setup**
@@ -238,4 +276,4 @@ Each step has one resource to learn from. Kheluram is signed off on a step once 
 
 ## Sources
 
-Built from Jacob's Teams chats with Summer, Matthew and Kheluram (9/11 to 9/23), the files above, and the [brokerage pipeline board](https://carma365-my.sharepoint.com/personal/matt_carma365_com/Documents/Microsoft%20Teams%20Chat%20Files/brokerage_pipeline_board_2026-09-23.xlsx) from 9/23. The 9/22 training transcript could not be read because transcript access is turned off for the Carma tenant. Only the timelines table of the Brokerage SOP zip could be read.
+Built from Jacob's Teams chats with Summer, Matthew and Kheluram (9/11 to 9/23), about 40 brokerage email threads Summer sent or copied Jacob on (8/15 to 9/23), the files above, and the [brokerage pipeline board](https://carma365-my.sharepoint.com/personal/matt_carma365_com/Documents/Microsoft%20Teams%20Chat%20Files/brokerage_pipeline_board_2026-09-23.xlsx) from 9/23. The 9/22 training transcript could not be read because transcript access is turned off for the Carma tenant. Only the timelines table of the Brokerage SOP zip could be read.
