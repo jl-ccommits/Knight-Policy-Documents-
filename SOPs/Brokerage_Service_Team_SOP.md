@@ -38,7 +38,7 @@ All brokerage work enters and leaves through brokerage@carma365.com. If a file i
 **Rules**
 
 1. Agents, carriers and wholesalers send to brokerage@carma365.com. Summer already points new contacts there (IMA, 9/14); keep doing that.
-2. Anything Summer, Carma underwriting or Bryan receives directly gets forwarded to the brokerage inbox the same day, with the handoff note below. No work is assigned through Teams DMs or texts.
+2. Anything Summer, Carma underwriting or Bryan receives directly gets forwarded to the brokerage inbox the same day, with the handoff note below. No work is assigned through Teams DMs or texts. The Brokerage X Service Teams chat is for quick internal questions only; the record of every file stays in the brokerage inbox and C360.
 3. All replies to agents and carriers go out from the brokerage inbox, never a personal inbox, so the thread stays visible to the whole team. Brokerage files also stay out of service@carma365.com; if one lands there, as the Ethos flood request did on 9/21, move it to the brokerage inbox.
 4. Every email and document is saved to the account in C360 and to Brokerage > New Business > the Named Insured folder. Nothing is saved to a desktop.
 5. If C360 errors out (as it did on 9/23), log the item in the NB Log and back-fill C360 the same day it recovers.
@@ -97,7 +97,7 @@ The left branch loops until the file is complete; nothing goes to market with mi
 | --- | --- | --- | --- | --- |
 | 1 | Receive and log | Kheluram (Matthew backs up) | Reply to the agent that it's received. Create the C360 account and NB Log row. Check the state in the SLA Clearance Tool: no E&S in states where Carma has no surplus lines license. | C360 status, NB Log: Date Recd, Agent, LOB, Xdate, Incumbent |
 | 2 | Complete the file | Kheluram | List what is missing (app, loss runs, SOV, supplementals, license) in one email to the agent. | NB Log status `Pending - Info Requested`, follow-up date |
-| 3 | Market | Matthew picks markets, Kheluram sends | Choose carriers from the Marketing Matrix and Submission Routing Playbook by appetite, state and commission. Send from the brokerage inbox or the carrier portal (Blitz, LIO, Wholesure, Propeller). | `Pending - Submitted to Markets`, each submission email saved to C360 |
+| 3 | Market | Matthew picks markets, Kheluram sends | Choose carriers from the Marketing Matrix and Submission Routing Playbook by appetite, state and commission. Send from the brokerage inbox or the carrier portal (Blitz, LIO, Wholesure, Propeller). Strip the retail agent's name and contact details first; if a market asks, the retail agent is Bryan Mosser. | `Pending - Submitted to Markets`, each submission email saved to C360 |
 | 4 | Quote received | Kheluram | Log every quote or decline in C360. Chase any market that hasn't answered. | Quote PDF saved, quoted premium in NB Log |
 | 5 | Select quote | Matthew | Apply the selection rules below. No email to Summer unless an Oversight item applies. | Note in C360: which quote and why |
 | 6 | Build proposal | Kheluram, Matthew checks | Make the ten changes in the Retail Quote Preparation Training Guide, add the Carma Quote Cover Letter and the T&F Calculator figures. Matthew runs the Final Quality Checklist. | Proposal saved to Named Insured folder and C360 |
@@ -173,6 +173,7 @@ Summer approves only the items below. Everything else Matthew decides and releas
 
 **Never allowed, no approval needed to say no**
 
+- Giving any carrier, wholesaler or MGA our retail agent's name or contact details. If a market asks, list Bryan Mosser as the retail agent. Blitz has been asking; it is an MGA, a trading partner and a competitor (Summer, 9/23).
 - An admin fee below the band minimum.
 - E&S business in a state flagged in the SLA Clearance Tool.
 - Carrier contact details, carrier tax lines or total commission on a retail proposal.
