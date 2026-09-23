@@ -40,7 +40,7 @@
 <button id="replay">↻ Replay</button>
 <script>
 const NS = 'http://www.w3.org/2000/svg';
-const W = 1920, H = 1080, DURATION = 21, GROUND = 880;
+const W = 1920, H = 1080, BASE_DURATION = 21, GROUND = 880;
 const INK = '#2B211D', CORAL = '#E8735F', CORAL_DK = '#C9564A', GREEN = '#5E8C61', MUSTARD = '#E9B949', SKY = '#7FA9DA', PAPER = '#FFFDF8';
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -109,9 +109,15 @@ const setO = (node, o) => { node.setAttribute('opacity', clamp(o).toFixed(3)); n
 
 // ---------- character: ?char=folder (default) or ?char=critter (CARMA's own blocky mascot) ----------
 const params = new URLSearchParams(location.search);
-const CHAR = params.get('char') === 'critter' ? 'critter' : 'folder';
-const HELD_Y = CHAR === 'critter' ? -330 : -282;   // where the indication card is held overhead
-const HOLD_ARM = CHAR === 'critter' ? 3.6 : 2.5;
+// folder: the QuickQuote-ad folder. The rest are the CARMA critter: tabs (index-tab ears),
+// slash (logo slash as a cowlick), ink (charcoal body with coral slash blush), cowboy (lasso alt cut).
+const CHAR = ['tabs', 'slash', 'ink', 'cowboy'].includes(params.get('char')) ? params.get('char') : 'folder';
+const IS_INK = CHAR === 'ink', COWBOY = CHAR === 'cowboy';
+const BODY = IS_INK ? '#3B3836' : CORAL, FACE_INK = IS_INK ? PAPER : INK;
+const HELD_Y = { folder: -282, tabs: -318, slash: -340, ink: -290, cowboy: -335 }[CHAR];   // card held overhead
+const HOLD_ARM = { folder: 2.5, tabs: 3.45, slash: 4.0, ink: 2.8, cowboy: 3.9 }[CHAR];
+const LASSO_AT = 7.2, LASSO_LEN = COWBOY ? 1.8 : 0;   // cowboy: time inserted to rope the phone in
+const DURATION = BASE_DURATION + LASSO_LEN;
 
 // ---------- timeline ----------
 const T = {
@@ -234,7 +240,10 @@ const watchSub = text(watch, 0, 150, 'under 3 min!', { size: 34, fill: GREEN });
 // critter
 const critter = el('g', {}, world);
 const cBody = el('g', {}, critter);
-const LEGS = [-96, -58, 58, 96].map((x) => { const g = el('g', {}, cBody); rrect(g, x - 14, -44, 28, 44, 6, CORAL, { sw: 4 }); return g; });
+const CUTE = CHAR !== 'folder';
+const EYE_Y = CUTE ? -104 : -112, EYE_DX = CUTE ? 50 : 44, MOUTH_Y = CUTE ? -74 : -80, LEG_H = CUTE ? 34 : 44;
+const LEGS = [-96, -58, 58, 96].map((x) => { const g = el('g', {}, cBody); rrect(g, x - 14, -LEG_H, 28, LEG_H, CUTE ? 12 : 6, CORAL, { sw: 4 }); return g; });
+let EARS = null, TUFT = null;
 if (CHAR === 'folder') {
   rrect(cBody, -66, -226, 118, 58, 5, PAPER, { sw: 3.5, hatch: false });
   line(cBody, [[-52, -210], [30, -212]], { sw: 2.5, stroke: '#b9aea4' });
@@ -242,34 +251,58 @@ if (CHAR === 'folder') {
   rrect(cBody, -124, -194, 248, 168, 16, CORAL, { sw: 5 });
   line(cBody, [[-110, -168], [110, -168]], { sw: 2.5, stroke: CORAL_DK, j: 1.5 });
 } else {
-  rrect(cBody, -124, -194, 248, 168, 22, CORAL, { sw: 5 });
-  // little agent hat, tilted, with the logo's coral slash as a feather
-  const hat = el('g', { transform: 'rotate(-7 -10 -196)' }, cBody);
-  poly(hat, [[52, -222], [68, -222], [98, -300], [82, -300]], '#EC5F59', { sw: 3.5, j: 0.8 });
-  rrect(hat, -54, -258, 108, 62, 18, GREEN, { sw: 4.5 });
-  rrect(hat, -54, -222, 108, 14, 4, INK, { sw: 2, single: true, hatch: false });
-  ell(hat, 0, -197, 84, 13, '#4E7A51', { sw: 4.5 });
-  ell(hat, 34, -215, 7, 7, MUSTARD, { sw: 2, single: true, hatch: false });
-  // green bow tie
-  poly(cBody, [[-4, -46], [-34, -62], [-34, -30]], GREEN, { sw: 3.5, j: 0.8 });
-  poly(cBody, [[4, -46], [34, -62], [34, -30]], GREEN, { sw: 3.5, j: 0.8 });
-  rrect(cBody, -8, -54, 16, 16, 5, '#4E7A51', { sw: 3, single: true, hatch: false });
+  if (CHAR === 'tabs') {   // two index tabs from the QuickQuote folder, worn as ears
+    const earL = el('g', {}, cBody), earR = el('g', {}, cBody);
+    rrect(earL, -100, -236, 66, 64, 14, PAPER, { sw: 4, hatch: false }); line(earL, [[-88, -220], [-50, -221]], { sw: 2.5, stroke: '#b9aea4' });
+    rrect(earR, 30, -244, 72, 72, 14, '#F6E9DA', { sw: 4 }); line(earR, [[42, -226], [88, -227]], { sw: 2.5, stroke: '#b9aea4' }); line(earR, [[42, -212], [72, -212]], { sw: 2.5, stroke: '#b9aea4' });
+    EARS = [[earL, -67, -180], [earR, 66, -180]];
+  }
+  if (CHAR === 'slash') {  // the coral slash from the CARMA logo as a cowlick
+    TUFT = el('g', {}, cBody);
+    poly(TUFT, [[-4, -180], [22, -180], [62, -272], [36, -272]], '#EC5F59', { sw: 4.5, j: 0.8 });
+  }
+  rrect(cBody, -126, -200, 252, 174, 44, BODY, { sw: 5 });
+  ell(cBody, -62, -170, 28, 10, '#fff', { stroke: null, hatch: false, fillOpacity: 0.25 });
+  if (COWBOY) {  // green bandana
+    poly(cBody, [[-46, -48], [46, -48], [0, -16]], GREEN, { sw: 3.5, j: 0.8 });
+    ell(cBody, 0, -48, 9, 6, '#4E7A51', { sw: 3, single: true, hatch: false });
+  }
 }
 const face = el('g', {}, cBody);
 const eyes = el('g', {}, face);
 const eyeL = el('g', {}, eyes), eyeR = el('g', {}, eyes);
-ell(eyeL, -44, -112, 11, 16, INK, { single: true, sw: 1, hatch: false }); el('circle', { cx: -40, cy: -118, r: 4, fill: '#fff' }, eyeL);
-ell(eyeR, 44, -112, 11, 16, INK, { single: true, sw: 1, hatch: false }); el('circle', { cx: 48, cy: -118, r: 4, fill: '#fff' }, eyeR);
+const ERX = CUTE ? 15 : 11, ERY = CUTE ? 20 : 16;
+[[eyeL, -EYE_DX], [eyeR, EYE_DX]].forEach(([g, ex]) => {
+  if (IS_INK) ell(g, ex, EYE_Y, ERX + 7, ERY + 7, PAPER, { single: true, sw: 2.5, hatch: false });
+  ell(g, ex, EYE_Y, ERX, ERY, INK, { single: true, sw: 1, hatch: false });
+  el('circle', { cx: ex + (CUTE ? 5 : 4), cy: EYE_Y - (CUTE ? 8 : 6), r: CUTE ? 5.5 : 4, fill: '#fff' }, g);
+  if (CUTE) el('circle', { cx: ex - 5, cy: EYE_Y + 9, r: 2.6, fill: '#fff' }, g);
+});
 const eyesHappy = el('g', {}, face);
-line(eyesHappy, [[-58, -106], [-44, -122], [-30, -106]], { sw: 6 }); line(eyesHappy, [[30, -106], [44, -122], [58, -106]], { sw: 6 });
-ell(face, -84, -80, 16, 9, '#F3A59A', { stroke: null, hatch: false }); ell(face, 84, -80, 16, 9, '#F3A59A', { stroke: null, hatch: false });
-const mSmile = line(face, [[-14, -84], [0, -76], [14, -84]], { sw: 5 });
-const mOpen = poly(face, [[-18, -88], [18, -88], [12, -70], [0, -64], [-12, -70]], INK, { sw: 3, hatch: false, j: 0.8 });
-const mO = ell(face, 0, -78, 9, 11, INK, { single: true, sw: 2, hatch: false });
+[-EYE_DX, EYE_DX].forEach((ex) => line(eyesHappy, [[ex - 14, EYE_Y + 6], [ex, EYE_Y - 10], [ex + 14, EYE_Y + 6]], { sw: 6, stroke: FACE_INK }));
+if (IS_INK) {
+  [-1, 1].forEach((sd) => [0, 18].forEach((o) => poly(face, [[sd * 88 - 18 + o, MOUTH_Y + 6], [sd * 88 - 10 + o, MOUTH_Y + 6], [sd * 88 + 2 + o, MOUTH_Y - 16], [sd * 88 - 6 + o, MOUTH_Y - 16]], '#EC5F59', { stroke: null, hatch: false })));
+} else {
+  [-1, 1].forEach((sd) => ell(face, sd * (CUTE ? 90 : 84), CUTE ? MOUTH_Y - 4 : -80, CUTE ? 21 : 16, CUTE ? 12 : 9, '#F3A59A', { stroke: null, hatch: false }));
+}
+const MF = IS_INK ? CORAL_DK : INK;
+const mSmile = CUTE ? line(face, [[-13, MOUTH_Y - 4], [-6.5, MOUTH_Y + 3], [0, MOUTH_Y - 3], [6.5, MOUTH_Y + 3], [13, MOUTH_Y - 4]], { sw: 4.5, stroke: FACE_INK, j: 0.4 })
+  : line(face, [[-14, -84], [0, -76], [14, -84]], { sw: 5 });
+const mOpen = CUTE ? poly(face, [[-15, MOUTH_Y - 6], [15, MOUTH_Y - 6], [10, MOUTH_Y + 9], [0, MOUTH_Y + 14], [-10, MOUTH_Y + 9]], MF, { sw: 3, hatch: false, j: 0.6, stroke: FACE_INK })
+  : poly(face, [[-18, -88], [18, -88], [12, -70], [0, -64], [-12, -70]], INK, { sw: 3, hatch: false, j: 0.8 });
+if (CUTE) ell(mOpen, 0, MOUTH_Y + 7, 6, 4, '#F3A59A', { stroke: null, hatch: false });
+const mO = CUTE ? ell(face, 0, MOUTH_Y + 2, 7, 9, MF, { single: true, sw: 2, hatch: false, stroke: FACE_INK })
+  : ell(face, 0, -78, 9, 11, INK, { single: true, sw: 2, hatch: false });
+if (COWBOY) {  // cowboy hat with a coral band
+  const hat = el('g', { transform: 'rotate(-8 0 -200)' }, cBody);
+  sketch(hat, 'M-52 -198 L-46 -256 Q-26 -270 0 -256 Q26 -270 46 -256 L52 -198 Z', null, '#C99A63', { sw: 4.5 });
+  rrect(hat, -51, -220, 102, 16, 5, '#EC5F59', { sw: 3 });
+  sketch(hat, 'M-118 -196 Q-132 -226 -104 -214 Q0 -186 104 -214 Q132 -226 118 -196 Q0 -166 -118 -196 Z', null, '#B98A55', { sw: 4.5 });
+}
 const armL = el('g', {}, critter), armR = el('g', {}, critter);
 const armLi = el('g', {}, armL), armRi = el('g', {}, armR);
-rrect(armLi, -38, -14, 42, 28, 9, CORAL, { sw: 4 });
-rrect(armRi, -4, -14, 42, 28, 9, CORAL, { sw: 4 });
+rrect(armLi, -38, -14, 42, 28, CUTE ? 14 : 9, CORAL, { sw: 4 });
+rrect(armRi, -4, -14, 42, 28, CUTE ? 14 : 9, CORAL, { sw: 4 });
 const held = el('g', {}, critter);
 function drawCard(parent) {
   rrect(parent, -104, -62, 208, 124, 10, PAPER, { sw: 4.5, hatch: false });
@@ -324,6 +357,17 @@ function bubble(parent, rx, ry, tail, lines, size) {
 const bub1 = bubble(world, 250, 90, [-60, 170], ['New cannabis', 'account!'], 50);
 const bub2 = bubble(world, 220, 70, [150, 130], ['Ugh… paperwork.'], 46);
 const bub3 = bubble(world, 190, 88, [170, 150], ['QUOTED!'], 78);
+
+// lasso props (cowboy cut)
+const lassoG = el('g', {}, world);
+const ropeStyle = (w, c) => ({ fill: 'none', stroke: c, 'stroke-width': w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+const ropeOutline = el('path', ropeStyle(10, INK), lassoG), rope = el('path', ropeStyle(5, '#D9AE72'), lassoG);
+const loopOutline = el('path', ropeStyle(10, INK), lassoG), loop = el('path', ropeStyle(5, '#D9AE72'), lassoG);
+const speedLines = el('g', {}, world);
+[-230, -150, -60, 30, 120, 210].forEach((y, i) => line(speedLines, [[20 + (i % 2) * 40, y], [150 + (i % 3) * 50, y]], { sw: 5 }));
+const dust = [0, 1, 2].map(() => { const g = el('g', {}, world); ell(g, 0, 0, 34, 20, '#E6DCCB', { sw: 3 }); return g; });
+const yeehaw = bubble(world, 170, 70, [120, 130], ['Yee-haw!'], 56);
+const loopD = (cx, cy, rx, ry) => { let d = ''; for (let i = 0; i <= 36; i++) { const a = (i / 36) * 6.283; d += (i ? 'L' : 'M') + f1(cx + Math.cos(a) * rx) + ',' + f1(cy + Math.sin(a) * ry); } return d + 'Z'; };
 
 // confetti
 const CONF = [];
@@ -380,7 +424,7 @@ function jumpAt(t) {
   });
   return [y, sq];
 }
-const CAM = [[0, 960, 560, 1.35], [7.0, 960, 560, 1.35], [7.9, 1300, 560, 1.35], [15.5, 1300, 560, 1.35], [16.6, 960, 540, 1]];
+const CAM = [[0, 960, 560, 1.35], [COWBOY ? LASSO_AT : 7.0, 960, 560, 1.35], [7.9, 1300, 560, 1.35], [15.5, 1300, 560, 1.35], [16.6, 960, 540, 1]];
 function camAt(t) {
   if (t <= CAM[0][0]) return CAM[0].slice(1);
   for (let i = 0; i < CAM.length - 1; i++) {
@@ -389,10 +433,10 @@ function camAt(t) {
   }
   return CAM[CAM.length - 1].slice(1);
 }
-function setTime(t) {
+function drawBase(t, tr = t) {
   const [camX, camY, camZ] = camAt(t);
   setT(world, `translate(960 540) scale(${camZ.toFixed(4)}) translate(${f1(-camX)} ${f1(-camY)})`);
-  document.getElementById('turb').setAttribute('seed', String(1 + (Math.floor(t * 8) % 6)));
+  document.getElementById('turb').setAttribute('seed', String(1 + (Math.floor(tr * 8) % 6)));
 
   // bunting drop + sway
   setT(bunting, `translate(0 ${f1((1 - outBack(P(t, 0, 0.8), 1.4)) * -220)})`);
@@ -415,9 +459,11 @@ function setTime(t) {
   const buried = t > T.papers0 + 0.5 && t < T.burst;
   PAPERS.forEach((p) => { /* squash as each sheet lands */ });
   let sqp = sq; PAPERS.forEach((p) => { if (t < T.burst) sqp -= bump(t, p.t0 + 0.42, 0.16, 0.035); });
-  const sy = sqp * (buried ? 0.92 : 1), sx = 1 / Math.sqrt(sy);
+  const sy = sqp * (buried ? 0.92 : 1) * (CUTE ? 1 + Math.sin(t * 2.4) * 0.018 : 1), sx = 1 / Math.sqrt(sy);
   setT(critter, `translate(${f1(x)} ${f1(y - bob)})`);
   setT(cBody, `scale(${sx.toFixed(3)} ${sy.toFixed(3)})`);
+  if (EARS) EARS.forEach(([g, px, py], i) => setT(g, `rotate(${f1(Math.sin(t * 3 + i * 1.3) * 4 + (jy > 4 ? (i ? 12 : -12) : 0))} ${px} ${py})`));
+  if (TUFT) setT(TUFT, `rotate(${f1(Math.sin(t * 2.6) * 5 + (jy > 4 ? -10 : 0))} 9 -180)`);
   const dir = t > T.walk3[0] - 0.1 && t < T.walk3[1] + 0.1 ? -1 : (xn >= x ? 1 : 1);
   // face
   const excited = t > T.excite - 0.05 && t < T.bubble1[1];
@@ -426,8 +472,8 @@ function setTime(t) {
   const blinkM = (t + 0.4) % 2.6, blink = blinkM < 0.13 ? 1 - Math.sin(Math.PI * blinkM / 0.13) * 0.9 : 1;
   const lookX = (t > T.walk2[1] && t < T.catch) ? 6 : dir * 4 * (walking ? 1 : 0.4);
   setT(eyes, `translate(${f1(lookX)} 0)`);
-  setT(eyeL, `translate(0 ${f1(-112 * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
-  setT(eyeR, `translate(0 ${f1(-112 * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
+  setT(eyeL, `translate(0 ${f1(EYE_Y * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
+  setT(eyeR, `translate(0 ${f1(EYE_Y * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
   setO(eyes, happy ? 0 : 1); setO(eyesHappy, happy ? 1 : 0);
   const tapping = TAP_ALL.some(([c]) => t > c - 0.36 && t < c + 0.3);
   setO(mOpen, happy ? 1 : 0); setO(mO, !happy && tapping ? 1 : 0); setO(mSmile, !happy && !tapping ? 1 : 0);
@@ -463,7 +509,7 @@ function setTime(t) {
       if (f >= 1) py -= bump(t, p.t0 + 0.42, 0.2, 10);
       if (t > 5.3) pr += Math.sin(t * 13 + p.x1) * 2;
     } else {
-      const d = t - T.burst;
+      const d = tr - T.burst;   // real time, so sheets keep flying during the cowboy's lasso hold
       px = p.x1 + p.vx * d; py = p.y1 + p.vy * d + 1200 * d * d; pr = p.r1 + p.spin * d;
     }
     setO(p.g, py < 1300 ? 1 : 0);
@@ -479,7 +525,7 @@ function setTime(t) {
   if (t < T.phoneOut[0]) { const k = P(t, ...T.phoneIn); phx = lerp(2250, PHONE.x, outBack(k, 1.3)); phr = (1 - outCubic(k)) * 12; }
   else { const k = inCubic(P(t, ...T.phoneOut)); phx = lerp(PHONE.x, 2300, k); phr = k * 10; }
   const shake = t > T.eject - 0.1 && t < T.eject + 0.25 ? Math.sin(t * 90) * 5 : 0;
-  setO(phone, t > T.phoneIn[0] && t < T.phoneOut[1] ? 1 : 0);
+  setO(phone, t > T.phoneIn[0] && t < T.phoneOut[1] && !(COWBOY && t < LASSO_AT) ? 1 : 0);
   setT(phone, `translate(${f1(phx + shake)} ${PHONE.y}) rotate(${f1(phr)}) scale(${(1 + bump(t, T.button, 0.25, 0.02)).toFixed(3)})`);
   ROWS.forEach((r, i) => {
     const c = T.taps[i];
@@ -489,7 +535,7 @@ function setTime(t) {
   const bp = t >= T.button && t < T.button + 0.18;
   setT(btn, `translate(0 ${bp ? 5 : 0}) scale(${bp ? 0.97 : 1})`);
   SPARK.forEach((s, i) => {
-    const k = bump(t, 6.3 + i * 0.07, 0.6, 1);
+    const k = COWBOY ? 0 : bump(t, 6.3 + i * 0.07, 0.6, 1);
     setO(s.g, k); setT(s.g, `translate(${f1(PHONE.x + s.x)} ${f1(PHONE.y + s.y)}) scale(${(0.4 + k).toFixed(3)}) rotate(${f1(t * 90)})`);
   });
 
@@ -543,10 +589,69 @@ function setTime(t) {
   setT(endCta, `translate(${EX} 782) scale(${(Math.max(0.001, ck) * pulse).toFixed(3)}) translate(${-EX} -782)`);
   setO(endFine, P(t, T.end + 1.6, T.end + 2.0));
 }
+function drawLasso(t) {
+  const u = t - LASSO_AT;
+  const on = COWBOY && u >= 0 && u <= LASSO_LEN;
+  setO(lassoG, on ? 1 : 0); setO(speedLines, 0); dust.forEach((d) => setO(d, 0));
+  const yb = COWBOY && u > 0.05 && u < 1.0 ? Math.min(outBack(P(u, 0.05, 0.35), 2.2), 1 - inCubic(P(u, 0.8, 1.0))) : 0;
+  setO(yeehaw, yb > 0 ? 1 : 0); setT(yeehaw, `translate(700 440) scale(${Math.max(0.001, yb).toFixed(3)})`);
+  if (!on) return;
+  // widen the shot a little to show the throw, then land back where the base timeline resumes
+  const zk = Math.sin(Math.PI * clamp(u / LASSO_LEN));
+  setT(world, `translate(960 540) scale(${lerp(1.35, 1.1, zk).toFixed(4)}) translate(${f1(-lerp(960, 1200, zk))} -560)`);
+  const cx = CR_X.home, cy = GROUND;
+  const kThrow = P(u, 0.9, 1.12), kYank = P(u, 1.15, 1.7), kSettle = P(u, 1.7, 1.8);
+  let aR = -100 + Math.sin(u * 22) * 10, sR = 2.4, lean = 0;
+  if (u >= 0.9) { aR = lerp(-100, -8, outCubic(kThrow)); sR = lerp(2.4, 2.9, kThrow); }
+  if (u >= 1.15) { aR = lerp(-8, 6, kYank); sR = lerp(2.9, 1.5, inOut(kYank)); lean = -9 * Math.sin(Math.PI * Math.min(1, kYank * 1.1)); }
+  if (u >= 1.7) { aR = lerp(6, 0, kSettle); sR = lerp(1.5, 1, kSettle); }
+  const hop = u < 0.9 ? Math.abs(Math.sin(u * 11)) * 10 : 0;
+  setT(critter, `translate(${cx} ${f1(cy - hop)}) rotate(${f1(lean)})`);
+  setT(armRi, `rotate(${f1(aR)}) scale(${sR.toFixed(3)} 1)`);
+  LEGS.forEach((g) => setT(g, ''));
+  setO(eyes, u < 1.15 ? 0 : 1); setO(eyesHappy, u < 1.15 ? 1 : 0); setO(mOpen, 1); setO(mSmile, 0); setO(mO, 0);
+  // hand position in world space
+  const L = 38 * sR, ar = (aR * Math.PI) / 180, lr = (lean * Math.PI) / 180;
+  const lx = 122 + Math.cos(ar) * L, ly = -120 + Math.sin(ar) * L;
+  const hx = cx + lx * Math.cos(lr) - ly * Math.sin(lr), hy = cy - hop + lx * Math.sin(lr) + ly * Math.cos(lr);
+  // the phone gets roped in from off-screen right
+  const phx = u >= 1.15 ? lerp(2350, PHONE.x, outBack(kYank, 1.2)) : 2350;
+  setO(phone, u >= 1.15 ? 1 : 0);
+  setT(phone, `translate(${f1(phx)} ${PHONE.y}) rotate(${f1((1 - kYank) * -10 + bump(u, 1.62, 0.18, 4))})`);
+  let loopPath, ropePath;
+  if (u < 0.9) {   // twirl overhead
+    const lcx = hx - 10, lcy = hy - 46, th = u * 19;
+    loopPath = loopD(lcx, lcy, 118, 30);
+    ropePath = `M${f1(hx)},${f1(hy)} Q${f1(hx + 10)},${f1(hy - 30)} ${f1(lcx + Math.cos(th) * 118)},${f1(lcy + Math.sin(th) * 30)}`;
+  } else if (u < 1.15) {   // throw
+    const k = inOut(kThrow), rx = lerp(118, 90, k);
+    const lcx = lerp(hx - 10, 2250, k), lcy = lerp(hy - 46, 560, k) - Math.sin(Math.PI * k) * 160;
+    loopPath = loopD(lcx, lcy, rx, lerp(30, 70, k));
+    ropePath = `M${f1(hx)},${f1(hy)} Q${f1((hx + lcx) / 2)},${f1(Math.max(hy, lcy) + 60)} ${f1(lcx - rx)},${f1(lcy)}`;
+  } else {   // taut, yank, then slack
+    const lx2 = phx - 172, ly2 = PHONE.y + 20, sag = u >= 1.7 ? lerp(4, 90, kSettle) : 4;
+    loopPath = loopD(phx, ly2, 176, 44);
+    ropePath = `M${f1(hx)},${f1(hy)} Q${f1((hx + lx2) / 2)},${f1((hy + ly2) / 2 + sag)} ${f1(lx2)},${f1(ly2)}`;
+  }
+  [ropeOutline, rope].forEach((pth) => pth.setAttribute('d', ropePath));
+  [loopOutline, loop].forEach((pth) => pth.setAttribute('d', loopPath));
+  setO(lassoG, u >= 1.7 ? 1 - kSettle : 1);
+  if (u >= 1.15 && u < 1.75) {
+    setO(speedLines, Math.sin(Math.PI * P(u, 1.15, 1.75))); setT(speedLines, `translate(${f1(phx + 190)} ${PHONE.y})`);
+    dust.forEach((d, i) => { const q = P(u, 1.2 + i * 0.1, 1.6 + i * 0.1); setO(d, Math.sin(Math.PI * q)); setT(d, `translate(${f1(cx - 90 - i * 60 - q * 60)} ${f1(GROUND - 16 - q * 30)}) scale(${(0.5 + q).toFixed(3)})`); });
+  }
+  SPARK.forEach((sp, i) => { const k = bump(u, 1.55 + i * 0.05, 0.25, 1); if (k > 0) { setO(sp.g, k); setT(sp.g, `translate(${f1(PHONE.x + sp.x)} ${f1(PHONE.y + sp.y)}) scale(${(0.4 + k).toFixed(3)})`); } });
+}
+// cowboy cut: hold the base timeline at LASSO_AT while the critter ropes the phone in
+function setTime(t) {
+  const b = !COWBOY || t < LASSO_AT ? t : t < LASSO_AT + LASSO_LEN ? LASSO_AT : t - LASSO_LEN;
+  drawBase(b, t);
+  drawLasso(t);
+}
 window.setTime = setTime;
 window.DURATION = DURATION;
 window.STAGE = [W, H];
-window.SFX = [
+const BASE_SFX = [
   ...Array.from({ length: 14 }, (_, i) => ({ t: 0.3 + i * 0.145, k: 'step' })),
   { t: T.excite, k: 'boing' }, { t: T.bubble1[0], k: 'pop' },
   ...PAPERS.map((p) => ({ t: p.t0 + 0.42, k: 'paper' })),
@@ -566,6 +671,11 @@ window.SFX = [
   { t: T.end, k: 'pop' }, { t: T.end + 0.3, k: 'pop2' }, { t: T.end + 0.6, k: 'scribble' },
   { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
 ];
+const LASSO_SFX = [[0.05, 'pop'], [0.1, 'swish'], [0.4, 'swish'], [0.7, 'swish'], [0.9, 'whoosh'], [1.15, 'boing'], [1.17, 'whoosh'],
+  [1.25, 'paper'], [1.4, 'paper'], [1.55, 'paper'], [1.65, 'ding'], [1.7, 'sparkle']].map(([u, k]) => ({ t: LASSO_AT + u, k }));
+window.SFX = COWBOY
+  ? [...BASE_SFX.filter((c) => !(c.t >= 5.85 && c.t <= 6.45)).map((c) => ({ ...c, t: c.t >= LASSO_AT ? c.t + LASSO_LEN : c.t })), ...LASSO_SFX]
+  : BASE_SFX;
 
 // ---------- live playback ----------
 function fit() { document.getElementById('stage').style.transform = `scale(${Math.min(innerWidth / W, innerHeight / H)})`; }

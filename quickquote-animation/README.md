@@ -5,7 +5,8 @@ Two cuts:
 | File | Format | Style |
 |---|---|---|
 | `quickquote-sketch.mp4` (`sketch.html`) | 16:9, 1920×1080, 21s | Hand-drawn doodle (boiling pencil lines, paper texture), after Tak's "Oktoberfest" clip |
-| `quickquote-sketch-critter.mp4` (`sketch.html?char=critter`) | 16:9, 1920×1080, 21s | Same sketch cut starring the CARMA critter (see `mascot-critter.png`) |
+| `quickquote-sketch-tabs.mp4` (`sketch.html?char=tabs`) | 16:9, 1920×1080, 21s | Same sketch cut starring the CARMA critter (tab ears) |
+| `quickquote-sketch-cowboy.mp4` (`sketch.html?char=cowboy`) | 16:9, 1920×1080, 22.8s | Cowboy alt: the critter lassos the QuickQuote phone and yanks it in |
 | `quickquote.mp4` (`index.html`) | 4:5, 1080×1350, 23.5s | Clean brand/UI demo matching carma365.com |
 
 **Sketch cut:** a coral folder critter walks past the agency. A new cannabis account
@@ -14,9 +15,13 @@ hop-taps Coverage → Eligibility → Rate → Indication while a stopwatch runs
 and it catches the $1,511 non-binding indication ("QUOTED!"). It ends on the
 CARMA QuickQuote card.
 
-**CARMA critter:** an original blocky mascot in a chunky-doodle style: coral body, stubby legs and
-side nubs, round shiny eyes, a forest-green agent hat with the logo's coral slash as a feather,
-and a green bow tie. Switch characters with `?char=critter` (the default is the folder).
+**CARMA critter:** an original blocky mascot with baby-schema proportions (big low-set eyes with
+double shines, rounded squishy body, stubby legs, tiny "w" mouth). Its CARMA-specific looks
+are shown side by side in `mascot-options.png` and picked with `?char=`:
+- `tabs`: index tabs from the QuickQuote folder worn as ears (recommended)
+- `slash`: the logo's coral slash as a cowlick
+- `ink`: charcoal body in the wordmark color, with coral slash blush marks
+- `cowboy`: hat, bandana and a lasso that ropes the phone in (adds 1.8s)
 
 ## Brand cut
 
