@@ -49,6 +49,7 @@ const outCubic = (x) => 1 - Math.pow(1 - x, 3);
 const inCubic = (x) => x * x * x;
 const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const outBack = (x, s = 1.9) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
+const outElastic = (x) => (x === 0 || x === 1 ? x : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * (2 * Math.PI) / 3) + 1);
 const bump = (t, c, d = 0.35, amp = 1) => (t >= c && t <= c + d ? Math.sin(Math.PI * (t - c) / d) * amp : 0);
 function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
 const f1 = (v) => v.toFixed(1);
@@ -110,13 +111,14 @@ const setO = (node, o) => { node.setAttribute('opacity', clamp(o).toFixed(3)); n
 // ---------- character: ?char=folder (default) or ?char=critter (CARMA's own blocky mascot) ----------
 const params = new URLSearchParams(location.search);
 // folder: the QuickQuote-ad folder. The rest are the CARMA critter: tabs (index-tab ears),
-// slash (logo slash as a cowlick), ink (charcoal body with coral slash blush), cowboy (lasso alt cut).
-const CHAR = ['tabs', 'slash', 'ink', 'cowboy'].includes(params.get('char')) ? params.get('char') : 'folder';
+// slash (logo slash as a cowlick), ink (charcoal body with coral slash blush), bolt (yellow lightning
+// cowlick: quick), check (green checkmark sprout: quoted), sprout (two-leaf seedling), cowboy (lasso alt cut).
+const CHAR = ['tabs', 'slash', 'ink', 'bolt', 'check', 'sprout', 'cowboy'].includes(params.get('char')) ? params.get('char') : 'folder';
 const IS_INK = CHAR === 'ink', COWBOY = CHAR === 'cowboy';
 const BODY = IS_INK ? '#3B3836' : CORAL, FACE_INK = IS_INK ? PAPER : INK;
-const HELD_Y = { folder: -282, tabs: -318, slash: -340, ink: -290, cowboy: -335 }[CHAR];   // card held overhead
-const HOLD_ARM = { folder: 2.5, tabs: 3.45, slash: 4.0, ink: 2.8, cowboy: 3.9 }[CHAR];
-const LASSO_AT = 7.2, LASSO_LEN = COWBOY ? 1.8 : 0;   // cowboy: time inserted to rope the phone in
+const HELD_Y = { folder: -282, tabs: -318, slash: -340, ink: -290, bolt: -300, check: -300, sprout: -300, cowboy: -335 }[CHAR];   // card held overhead
+const HOLD_ARM = { folder: 2.5, tabs: 3.45, slash: 4.0, ink: 2.8, bolt: 3.0, check: 3.0, sprout: 3.0, cowboy: 3.9 }[CHAR];
+const LASSO_AT = 7.2, LASSO_LEN = COWBOY ? 2.2 : 0;   // cowboy: time inserted to rope the phone in
 const DURATION = BASE_DURATION + LASSO_LEN;
 
 // ---------- timeline ----------
@@ -260,6 +262,22 @@ if (CHAR === 'folder') {
   if (CHAR === 'slash') {  // the coral slash from the CARMA logo as a cowlick
     TUFT = el('g', {}, cBody);
     poly(TUFT, [[-4, -180], [22, -180], [62, -272], [36, -272]], '#EC5F59', { sw: 4.5, j: 0.8 });
+  }
+  if (CHAR === 'bolt') {   // yellow lightning cowlick: the "Quick" in QuickQuote
+    TUFT = el('g', {}, cBody);
+    poly(TUFT, [[10, -296], [36, -296], [16, -256], [34, -256], [-10, -194], [2, -238], [-16, -238]], MUSTARD, { sw: 4.5, j: 0.6 });
+  }
+  if (CHAR === 'check') {  // green checkmark sprouting from the head: quoted / approved
+    TUFT = el('g', {}, cBody);
+    const ck = [[-30, -240], [-8, -216], [30, -276]];
+    line(TUFT, [[-8, -196], [-8, -216]], { sw: 22, j: 0.5 }); line(TUFT, ck, { sw: 26, j: 0.5 });
+    line(TUFT, [[-8, -196], [-8, -216]], { sw: 12, stroke: GREEN, j: 0.5 }); line(TUFT, ck, { sw: 16, stroke: GREEN, j: 0.5 });
+  }
+  if (CHAR === 'sprout') { // two-leaf seedling
+    TUFT = el('g', {}, cBody);
+    line(TUFT, [[4, -196], [0, -222], [4, -242]], { sw: 5 });
+    const lf = el('g', { transform: 'rotate(-38 0 -238)' }, TUFT); ell(lf, -26, -238, 26, 13, GREEN, { sw: 4 });
+    const rf = el('g', { transform: 'rotate(30 6 -244)' }, TUFT); ell(rf, 34, -244, 28, 14, '#7DAA7C', { sw: 4 });
   }
   rrect(cBody, -126, -200, 252, 174, 44, BODY, { sw: 5 });
   ell(cBody, -62, -170, 28, 10, '#fff', { stroke: null, hatch: false, fillOpacity: 0.25 });
@@ -600,7 +618,9 @@ function drawLasso(t) {
   const zk = Math.sin(Math.PI * clamp(u / LASSO_LEN));
   setT(world, `translate(960 540) scale(${lerp(1.35, 1.1, zk).toFixed(4)}) translate(${f1(-lerp(960, 1200, zk))} -560)`);
   const cx = CR_X.home, cy = GROUND;
-  const kThrow = P(u, 0.9, 1.12), kYank = P(u, 1.15, 1.7), kSettle = P(u, 1.7, 1.8);
+  const kThrow = P(u, 0.9, 1.12), kYank = P(u, 1.15, 1.7), kSettle = P(u, 1.7, 1.85);
+  // the lasso cinches the phone skinny while it's hauled in, then it springs back on release
+  const squeeze = u < 1.7 ? lerp(1, 0.66, outCubic(P(u, 1.15, 1.3))) + Math.sin(u * 40) * 0.012 * P(u, 1.3, 1.4) : lerp(0.66, 1, outElastic(P(u, 1.7, 2.2)));
   let aR = -100 + Math.sin(u * 22) * 10, sR = 2.4, lean = 0;
   if (u >= 0.9) { aR = lerp(-100, -8, outCubic(kThrow)); sR = lerp(2.4, 2.9, kThrow); }
   if (u >= 1.15) { aR = lerp(-8, 6, kYank); sR = lerp(2.9, 1.5, inOut(kYank)); lean = -9 * Math.sin(Math.PI * Math.min(1, kYank * 1.1)); }
@@ -617,7 +637,7 @@ function drawLasso(t) {
   // the phone gets roped in from off-screen right
   const phx = u >= 1.15 ? lerp(2350, PHONE.x, outBack(kYank, 1.2)) : 2350;
   setO(phone, u >= 1.15 ? 1 : 0);
-  setT(phone, `translate(${f1(phx)} ${PHONE.y}) rotate(${f1((1 - kYank) * -10 + bump(u, 1.62, 0.18, 4))})`);
+  setT(phone, `translate(${f1(phx)} ${PHONE.y}) rotate(${f1((1 - kYank) * -10 + bump(u, 1.62, 0.18, 4))}) scale(${squeeze.toFixed(3)} ${(1 + (1 - squeeze) * 0.45).toFixed(3)})`);
   let loopPath, ropePath;
   if (u < 0.9) {   // twirl overhead
     const lcx = hx - 10, lcy = hy - 46, th = u * 19;
@@ -629,8 +649,9 @@ function drawLasso(t) {
     loopPath = loopD(lcx, lcy, rx, lerp(30, 70, k));
     ropePath = `M${f1(hx)},${f1(hy)} Q${f1((hx + lcx) / 2)},${f1(Math.max(hy, lcy) + 60)} ${f1(lcx - rx)},${f1(lcy)}`;
   } else {   // taut, yank, then slack
-    const lx2 = phx - 172, ly2 = PHONE.y + 20, sag = u >= 1.7 ? lerp(4, 90, kSettle) : 4;
-    loopPath = loopD(phx, ly2, 176, 44);
+    const rx = (u < 1.7 ? lerp(190, 176 * squeeze + 8, P(u, 1.15, 1.3)) : 176 * squeeze + 8 + 50 * kSettle);
+    const lx2 = phx - rx, ly2 = PHONE.y + 20, sag = u >= 1.7 ? lerp(4, 90, kSettle) : 4;
+    loopPath = loopD(phx, ly2, rx, 44 + (u >= 1.7 ? 10 * kSettle : 0));
     ropePath = `M${f1(hx)},${f1(hy)} Q${f1((hx + lx2) / 2)},${f1((hy + ly2) / 2 + sag)} ${f1(lx2)},${f1(ly2)}`;
   }
   [ropeOutline, rope].forEach((pth) => pth.setAttribute('d', ropePath));
@@ -640,7 +661,7 @@ function drawLasso(t) {
     setO(speedLines, Math.sin(Math.PI * P(u, 1.15, 1.75))); setT(speedLines, `translate(${f1(phx + 190)} ${PHONE.y})`);
     dust.forEach((d, i) => { const q = P(u, 1.2 + i * 0.1, 1.6 + i * 0.1); setO(d, Math.sin(Math.PI * q)); setT(d, `translate(${f1(cx - 90 - i * 60 - q * 60)} ${f1(GROUND - 16 - q * 30)}) scale(${(0.5 + q).toFixed(3)})`); });
   }
-  SPARK.forEach((sp, i) => { const k = bump(u, 1.55 + i * 0.05, 0.25, 1); if (k > 0) { setO(sp.g, k); setT(sp.g, `translate(${f1(PHONE.x + sp.x)} ${f1(PHONE.y + sp.y)}) scale(${(0.4 + k).toFixed(3)})`); } });
+  SPARK.forEach((sp, i) => { const k = bump(u, 1.85 + i * 0.05, 0.3, 1); if (k > 0) { setO(sp.g, k); setT(sp.g, `translate(${f1(PHONE.x + sp.x)} ${f1(PHONE.y + sp.y)}) scale(${(0.4 + k).toFixed(3)})`); } });
 }
 // cowboy cut: hold the base timeline at LASSO_AT while the critter ropes the phone in
 function setTime(t) {
@@ -672,7 +693,7 @@ const BASE_SFX = [
   { t: T.end + 0.7, k: 'pop2' }, { t: T.end + 0.9, k: 'pop2' }, { t: T.end + 1.3, k: 'pop' }, { t: T.end + 1.4, k: 'sparkle' },
 ];
 const LASSO_SFX = [[0.05, 'pop'], [0.1, 'swish'], [0.4, 'swish'], [0.7, 'swish'], [0.9, 'whoosh'], [1.15, 'boing'], [1.17, 'whoosh'],
-  [1.25, 'paper'], [1.4, 'paper'], [1.55, 'paper'], [1.65, 'ding'], [1.7, 'sparkle']].map(([u, k]) => ({ t: LASSO_AT + u, k }));
+  [1.22, 'pop2'], [1.25, 'paper'], [1.4, 'paper'], [1.55, 'paper'], [1.72, 'boing'], [1.9, 'ding'], [1.95, 'sparkle']].map(([u, k]) => ({ t: LASSO_AT + u, k }));
 window.SFX = COWBOY
   ? [...BASE_SFX.filter((c) => !(c.t >= 5.85 && c.t <= 6.45)).map((c) => ({ ...c, t: c.t >= LASSO_AT ? c.t + LASSO_LEN : c.t })), ...LASSO_SFX]
   : BASE_SFX;
