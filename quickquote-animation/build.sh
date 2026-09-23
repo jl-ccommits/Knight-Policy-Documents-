@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Renders all cuts: quickquote.mp4 (4:5 brand), quickquote-sketch.mp4 (16:9 hand-drawn, folder)
-# quickquote-sketch-bolt.mp4 (CARMA critter, lightning bolt) and quickquote-sketch-cowboy.mp4 (lasso alt).
-# Other critter looks for stills/tests: PAGE=sketch.html QUERY=char=tabs|slash|ink|check|sprout.
+# quickquote-sketch-sprout.mp4 (CARMA critter, leaf sprout) and quickquote-sketch-cowboy.mp4 (lasso alt).
+# Other critter looks for stills/tests: PAGE=sketch.html QUERY=char=tabs|slash|ink|bolt|check.
 set -euo pipefail
 cd "$(dirname "$0")"
 FFMPEG="${FFMPEG:-ffmpeg}"
@@ -13,5 +13,5 @@ render() { # page out [query]
 }
 render index.html quickquote.mp4
 render sketch.html quickquote-sketch.mp4
-render sketch.html quickquote-sketch-bolt.mp4 char=bolt
+render sketch.html quickquote-sketch-sprout.mp4 char=sprout
 render sketch.html quickquote-sketch-cowboy.mp4 char=cowboy

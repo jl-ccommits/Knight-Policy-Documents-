@@ -118,6 +118,7 @@ const IS_INK = CHAR === 'ink', COWBOY = CHAR === 'cowboy';
 const BODY = IS_INK ? '#3B3836' : CORAL, FACE_INK = IS_INK ? PAPER : INK;
 const HELD_Y = { folder: -282, tabs: -318, slash: -340, ink: -290, bolt: -300, check: -300, sprout: -300, cowboy: -335 }[CHAR];   // card held overhead
 const HOLD_ARM = { folder: 2.5, tabs: 3.45, slash: 4.0, ink: 2.8, bolt: 3.0, check: 3.0, sprout: 3.0, cowboy: 3.9 }[CHAR];
+const STACHE = COWBOY || params.get('stache') === '1';   // handlebar mustache (always on the cowboy)
 const LASSO_AT = 7.2, LASSO_LEN = COWBOY ? 2.2 : 0;   // cowboy: time inserted to rope the phone in
 const DURATION = BASE_DURATION + LASSO_LEN;
 
@@ -243,7 +244,7 @@ const watchSub = text(watch, 0, 150, 'under 3 min!', { size: 34, fill: GREEN });
 const critter = el('g', {}, world);
 const cBody = el('g', {}, critter);
 const CUTE = CHAR !== 'folder';
-const EYE_Y = CUTE ? -104 : -112, EYE_DX = CUTE ? 50 : 44, MOUTH_Y = CUTE ? -74 : -80, LEG_H = CUTE ? 34 : 44;
+const EYE_Y = CUTE ? -104 : -112, EYE_DX = CUTE ? 50 : 44, MOUTH_Y = CUTE ? (STACHE ? -50 : -74) : -80, LEG_H = CUTE ? 34 : 44;
 const LEGS = [-96, -58, 58, 96].map((x) => { const g = el('g', {}, cBody); rrect(g, x - 14, -LEG_H, 28, LEG_H, CUTE ? 12 : 6, CORAL, { sw: 4 }); return g; });
 let EARS = null, TUFT = null;
 if (CHAR === 'folder') {
@@ -282,8 +283,8 @@ if (CHAR === 'folder') {
   rrect(cBody, -126, -200, 252, 174, 44, BODY, { sw: 5 });
   ell(cBody, -62, -170, 28, 10, '#fff', { stroke: null, hatch: false, fillOpacity: 0.25 });
   if (COWBOY) {  // green bandana
-    poly(cBody, [[-46, -48], [46, -48], [0, -16]], GREEN, { sw: 3.5, j: 0.8 });
-    ell(cBody, 0, -48, 9, 6, '#4E7A51', { sw: 3, single: true, hatch: false });
+    poly(cBody, [[-40, -38], [40, -38], [0, -8]], GREEN, { sw: 3.5, j: 0.8 });
+    ell(cBody, 0, -38, 9, 6, '#4E7A51', { sw: 3, single: true, hatch: false });
   }
 }
 const face = el('g', {}, cBody);
@@ -301,7 +302,7 @@ const eyesHappy = el('g', {}, face);
 if (IS_INK) {
   [-1, 1].forEach((sd) => [0, 18].forEach((o) => poly(face, [[sd * 88 - 18 + o, MOUTH_Y + 6], [sd * 88 - 10 + o, MOUTH_Y + 6], [sd * 88 + 2 + o, MOUTH_Y - 16], [sd * 88 - 6 + o, MOUTH_Y - 16]], '#EC5F59', { stroke: null, hatch: false })));
 } else {
-  [-1, 1].forEach((sd) => ell(face, sd * (CUTE ? 90 : 84), CUTE ? MOUTH_Y - 4 : -80, CUTE ? 21 : 16, CUTE ? 12 : 9, '#F3A59A', { stroke: null, hatch: false }));
+  [-1, 1].forEach((sd) => ell(face, sd * (CUTE ? 90 : 84), CUTE ? (STACHE ? -74 : MOUTH_Y - 4) : -80, CUTE ? 21 : 16, CUTE ? 12 : 9, '#F3A59A', { stroke: null, hatch: false }));
 }
 const MF = IS_INK ? CORAL_DK : INK;
 const mSmile = CUTE ? line(face, [[-13, MOUTH_Y - 4], [-6.5, MOUTH_Y + 3], [0, MOUTH_Y - 3], [6.5, MOUTH_Y + 3], [13, MOUTH_Y - 4]], { sw: 4.5, stroke: FACE_INK, j: 0.4 })
@@ -311,6 +312,12 @@ const mOpen = CUTE ? poly(face, [[-15, MOUTH_Y - 6], [15, MOUTH_Y - 6], [10, MOU
 if (CUTE) ell(mOpen, 0, MOUTH_Y + 7, 6, 4, '#F3A59A', { stroke: null, hatch: false });
 const mO = CUTE ? ell(face, 0, MOUTH_Y + 2, 7, 9, MF, { single: true, sw: 2, hatch: false, stroke: FACE_INK })
   : ell(face, 0, -78, 9, 11, INK, { single: true, sw: 2, hatch: false });
+let stache = null;
+if (STACHE) {  // handlebar mustache with curled-up tips
+  stache = el('g', {}, face);
+  const half = (m) => { const X = (x) => f1(x * m); return `M${X(0)},-84 Q${X(-16)},-95 ${X(-34)},-86 Q${X(-48)},-78 ${X(-57)},-85 Q${X(-65)},-94 ${X(-56)},-99 Q${X(-51)},-95 ${X(-54)},-89 Q${X(-50)},-81 ${X(-40)},-79 Q${X(-22)},-68 ${X(0)},-76 Z`; };
+  sketch(stache, half(1) + ' ' + half(-1), null, '#4A3228', { sw: 3.5, hatch: false });
+}
 if (COWBOY) {  // cowboy hat with a coral band
   const hat = el('g', { transform: 'rotate(-8 0 -200)' }, cBody);
   sketch(hat, 'M-52 -198 L-46 -256 Q-26 -270 0 -256 Q26 -270 46 -256 L52 -198 Z', null, '#C99A63', { sw: 4.5 });
@@ -493,6 +500,7 @@ function drawBase(t, tr = t) {
   setT(eyeL, `translate(0 ${f1(EYE_Y * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
   setT(eyeR, `translate(0 ${f1(EYE_Y * (1 - blink))}) scale(1 ${blink.toFixed(3)})`);
   setO(eyes, happy ? 0 : 1); setO(eyesHappy, happy ? 1 : 0);
+  if (stache) setT(stache, `translate(0 -68) scale(${(0.85 * (1 + (happy ? Math.sin(t * 14) * 0.06 : 0))).toFixed(3)} ${(1 - (happy ? Math.sin(t * 14) * 0.05 : 0)).toFixed(3)}) translate(0 84)`);   // tucked below the eyes
   const tapping = TAP_ALL.some(([c]) => t > c - 0.36 && t < c + 0.3);
   setO(mOpen, happy ? 1 : 0); setO(mO, !happy && tapping ? 1 : 0); setO(mSmile, !happy && !tapping ? 1 : 0);
   // arms
